@@ -220,6 +220,8 @@ textarea { resize: vertical; }
   font-size: 12px;
   line-height: 1.45;
 }
+.status-ok { color: var(--success); font-weight: 700; }
+.status-error { color: var(--danger); font-weight: 700; }
 
 .metric-grid {
   margin-top: 14px;

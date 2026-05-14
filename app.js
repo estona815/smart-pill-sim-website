@@ -1395,6 +1395,7 @@
   async function copyJson() {
     const json = JSON.stringify(getConfig(), null, 2);
     document.getElementById('jsonInput').value = json;
+    setJsonStatus('현재 설정을 JSON 입력창에 복사했습니다.');
     try {
       await navigator.clipboard.writeText(json);
     } catch (_) {
@@ -1408,10 +1409,17 @@
     try {
       const parsed = JSON.parse(text);
       setConfig(parsed);
-      alert('JSON 설정을 적용했습니다.');
+      setJsonStatus('JSON 설정을 적용했습니다.');
     } catch (err) {
-      alert(`JSON 형식 오류: ${err.message}`);
+      setJsonStatus(`JSON 형식 오류: ${err.message}`, true);
     }
+  }
+
+  function setJsonStatus(message, isError = false) {
+    const status = document.getElementById('jsonStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.className = isError ? 'hint status-error' : 'hint status-ok';
   }
 
   function loadExample() {
