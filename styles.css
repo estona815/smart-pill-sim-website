@@ -309,7 +309,7 @@ textarea { resize: vertical; }
 .status-risk { background: #fee2e2; color: #991b1b; }
 .status-danger { background: #fee2e2; color: #7f1d1d; }
 .status-mismatch { background: #ede9fe; color: #5b21b6; }
-.checklist-card { margin-top: 14px; }
+.checklist-card, .calibration-card { margin-top: 14px; }
 .checklist {
   margin: 0;
   padding: 0;

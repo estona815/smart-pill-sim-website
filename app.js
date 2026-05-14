@@ -8,14 +8,16 @@
     'actuatorErrorDeg', 'backlashDeg', 'servoTorqueMargin', 'powerStability', 'homeMode',
     'piPowerSource', 'servoPowerSource', 'use24vSupply', 'buckConverter', 'buckVoltage', 'buckCurrent',
     'commonGnd', 'dischargeSensor', 'sensorPosition', 'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount',
-    'trialCount', 'seed', 'designMode', 'controlCode'
+    'trialCount', 'seed', 'designMode', 'realTestTotal', 'realSuccess', 'realNoDrop', 'realDouble', 'realJam',
+    'realSensorFail', 'realMotorError', 'controlCode'
   ];
 
   const numericFields = new Set([
     'pillCount', 'pillDiameter', 'pillLength', 'pillWeight', 'hopperAngle', 'friction', 'tolerance',
     'slotSize', 'slotCount', 'wheelRadius', 'outletWidth', 'edgeChamfer', 'topGuard', 'motorSpeed',
     'motorAngle', 'actuatorErrorDeg', 'backlashDeg', 'servoTorqueMargin', 'powerStability', 'buckVoltage', 'buckCurrent', 'sensorPosition',
-    'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount', 'trialCount', 'seed'
+    'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount', 'trialCount', 'seed',
+    'realTestTotal', 'realSuccess', 'realNoDrop', 'realDouble', 'realJam', 'realSensorFail', 'realMotorError'
   ]);
 
   const els = {};
@@ -93,6 +95,8 @@
     if (cfg.trialCount > 3000) warnings.push('반복 횟수가 많으면 저사양 브라우저에서 시간이 걸릴 수 있습니다.');
     if (cfg.sensorRange < 2) warnings.push('토출부 포토센서/IR 감지 범위가 너무 좁습니다.');
     if (cfg.dischargeSensor !== 'yes') warnings.push('토출부 포토센서/IR이 없으면 배출 성공 확인이 불가능합니다.');
+    const calibration = getCalibration(cfg);
+    if (calibration.active && calibration.sum > calibration.total) warnings.push('실물 테스트 실패/성공 횟수 합이 총 횟수보다 큽니다.');
     return warnings;
   }
 
@@ -212,6 +216,48 @@
     const explicitRisk = powerCheck(cfg).riskScore;
     const stabilityRisk = clamp((100 - cfg.powerStability) / 100, 0, 0.85);
     return clamp(Math.max(explicitRisk, stabilityRisk * 0.75), 0, 1);
+  }
+
+  function getCalibration(cfg) {
+    const total = Math.max(0, Math.round(cfg.realTestTotal || 0));
+    const counts = {
+      success: Math.max(0, Math.round(cfg.realSuccess || 0)),
+      no_drop: Math.max(0, Math.round(cfg.realNoDrop || 0)),
+      double_drop: Math.max(0, Math.round(cfg.realDouble || 0)),
+      jam: Math.max(0, Math.round(cfg.realJam || 0)),
+      sensor_fail: Math.max(0, Math.round(cfg.realSensorFail || 0)),
+      motor_error: Math.max(0, Math.round(cfg.realMotorError || 0))
+    };
+    const sum = Object.values(counts).reduce((acc, value) => acc + value, 0);
+    const denominator = total || sum;
+    const confidence = denominator >= 100 ? 0.65 : denominator >= 30 ? 0.5 : denominator >= 10 ? 0.35 : denominator >= 5 ? 0.22 : 0;
+    const active = denominator >= 5 && sum > 0;
+    const rates = {};
+    for (const [key, value] of Object.entries(counts)) {
+      rates[key] = denominator ? value / denominator : 0;
+    }
+    return { active, counts, rates, total: denominator, sum, confidence };
+  }
+
+  function nudgeProbability(current, observed, confidence, maxDelta = 0.12) {
+    if (!Number.isFinite(observed)) return current;
+    const delta = clamp((observed - current) * confidence, -maxDelta, maxDelta);
+    return current + delta;
+  }
+
+  function applyCalibrationToProbabilities(cfg, probs) {
+    const calibration = getCalibration(cfg);
+    if (!calibration.active) return { ...probs, calibration };
+    const modelNoDrop = clamp((1 - probs.fillP) + probs.motorFailP * 0.45, 0, 1);
+    const adjustedNoDrop = nudgeProbability(modelNoDrop, calibration.rates.no_drop, calibration.confidence, 0.14);
+    const noDropDelta = adjustedNoDrop - modelNoDrop;
+    const fillP = clamp(probs.fillP - noDropDelta, 0.03, 0.98);
+    const doubleP = clamp(nudgeProbability(probs.doubleP, calibration.rates.double_drop, calibration.confidence, 0.12), 0.003, 0.7);
+    const jamP = clamp(nudgeProbability(probs.jamP, calibration.rates.jam, calibration.confidence, 0.14), 0.004, 0.82);
+    const sensorFailP = nudgeProbability(1 - probs.sensorP, calibration.rates.sensor_fail, calibration.confidence, 0.16);
+    const sensorP = clamp(1 - sensorFailP, 0.08, 0.995);
+    const motorFailP = clamp(nudgeProbability(probs.motorFailP, calibration.rates.motor_error, calibration.confidence, 0.14), 0, 0.86);
+    return { ...probs, fillP, doubleP, jamP, sensorP, motorFailP, calibration };
   }
 
   function getDesignFactors(cfg, random = Math.random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
@@ -367,7 +413,7 @@
   function calcProbabilities(cfg, random = Math.random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
     const f = getDesignFactors(cfg, random, trialIndex, totalTrials);
     const indexing = calcIndexingProbability(cfg, f);
-    return {
+    const raw = {
       fillP: calcFillProbability(cfg, f),
       doubleP: calcDoubleProbability(cfg, f),
       jamP: calcJamProbability(cfg, f),
@@ -381,6 +427,7 @@
       cycleTimeSec: f.cycleTimeSec,
       factors: f
     };
+    return applyCalibrationToProbabilities(cfg, raw);
   }
 
   function simulateSingle(cfg, random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
@@ -766,6 +813,7 @@
     renderFeasibility(feasibility);
     renderRecommendations(recommendParts(metrics.cfg, feasibility));
     renderDesignChecklist(metrics.cfg);
+    renderCalibrationSummary(metrics.cfg);
   }
 
   function updateMetrics(m) {
@@ -866,6 +914,37 @@
     }
   }
 
+  function renderCalibrationSummary(cfg = getConfig()) {
+    const list = document.getElementById('calibrationSummary');
+    if (!list) return;
+    const calibration = getCalibration(cfg);
+    list.innerHTML = '';
+    if (!calibration.active) {
+      list.appendChild(createDecisionItem('실험 데이터 없음', 'medium', '실물 테스트 5회 이상을 입력하면 시뮬레이션 확률을 완만하게 보정합니다.', '초안 제작 후 10회, 30회, 100회 단위로 데이터를 누적하세요.'));
+      return;
+    }
+    const successRate = calibration.rates.success;
+    const failureRate = 1 - successRate;
+    const topObserved = Object.entries(calibration.rates)
+      .filter(([key]) => key !== 'success')
+      .sort((a, b) => b[1] - a[1])[0];
+    const observedLabel = {
+      no_drop: '미배출',
+      double_drop: '중복 배출',
+      jam: '알약 걸림',
+      sensor_fail: '센서 감지 실패',
+      motor_error: '구동 위치 오차'
+    }[topObserved?.[0]] || '실패';
+    list.appendChild(createDecisionItem('실험값 반영 중', 'good',
+      `총 ${calibration.total}회 기준 정확 배출 ${fmtPct(successRate)}, 실패 ${fmtPct(failureRate)}가 입력되었습니다.`,
+      `가중치 ${fmt(calibration.confidence, 2)}로 확률식을 보정하며, 가장 큰 실측 실패 유형은 ${observedLabel}입니다.`));
+    if (calibration.sum !== calibration.total) {
+      list.appendChild(createDecisionItem('데이터 합계 확인', 'medium',
+        `입력 항목 합계 ${calibration.sum}회와 총 횟수 ${calibration.total}회가 다릅니다.`,
+        '총 횟수와 유형별 횟수를 맞추면 보고서 표로 쓰기 더 좋습니다.'));
+    }
+  }
+
   function createDecisionItem(title, status, reason, suggestion) {
     const item = document.createElement('div');
     item.className = 'decision-item';
@@ -914,6 +993,8 @@
     rows.push(['구동각/슬롯각 일치', `${fmt(p.desiredAngle, 2)}° / 설정 ${fmt(cfg.motorAngle, 2)}°`, Math.abs(cfg.motorAngle - p.desiredAngle) > 2 ? '슬롯 개수 기준 목표각과 설정각 차이 큼' : '슬롯 1칸 회전 조건에 근접']);
     rows.push(['자동 원점 보정 없음 누적 오차', `${fmt(f.cumulativeDrift, 2)}°`, f.cumulativeDrift > 0.45 ? '반복 횟수가 많을수록 위치 누적 오차 점검 필요' : '1~10회 단기 데모에서는 수동 초기 정렬로 검증 가능']);
     rows.push(['전원 구조 안정성', `${cfg.powerStability}% / ${cfg.servoPowerSource}`, cfg.powerStability < 70 || powerCheck(cfg).riskScore > 0.25 ? '전원 안정성이 낮아 구동 위치 오차와 미배출 위험 증가' : '현재 전원 구조 가정은 기본 조건 충족']);
+    const calibration = getCalibration(cfg);
+    rows.push(['실험 데이터 보정 상태', calibration.active ? `${calibration.total}회 입력 / 가중치 ${fmt(calibration.confidence, 2)}` : '미적용', calibration.active ? '실물 테스트 결과를 확률식에 완만하게 반영 중' : '실물 테스트 후 데이터 입력 필요']);
     rows.push(['예상 제작 반복 감소', `${Math.max(1, Math.round(m.failureRate * 6))}회 수준 문제 사전 발견`, '실제 출력 전에 주요 실패 유형을 먼저 확인하는 근거로 사용']);
 
     const tbody = document.getElementById('diagnosisTable');
@@ -1102,6 +1183,7 @@
     renderFeasibility(feasibilityCheck(cfg));
     renderRecommendations(recommendParts(cfg, feasibilityCheck(cfg)));
     renderDesignChecklist(cfg);
+    renderCalibrationSummary(cfg);
     drawScene({ cfg, result, progress: 1, animDropY: null });
   }
 
@@ -1457,8 +1539,23 @@
   }
 
   function downloadPng() {
+    const filename = 'pill_dispenser_sim_scene.png';
+    if (canvas.toBlob) {
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+      return;
+    }
     const link = document.createElement('a');
-    link.download = 'pill_dispenser_sim_scene.png';
+    link.download = filename;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
@@ -1489,6 +1586,41 @@
     } catch (err) {
       setJsonStatus(`JSON 형식 오류: ${err.message}`, true);
     }
+  }
+
+  function applyCalibration() {
+    const cfg = getConfig();
+    const calibration = getCalibration(cfg);
+    const status = document.getElementById('calibrationStatus');
+    if (status) {
+      if (calibration.active) {
+        status.textContent = `반영됨: ${calibration.total}회, 보정 가중치 ${fmt(calibration.confidence, 2)}`;
+        status.className = 'hint status-ok';
+      } else {
+        status.textContent = '5회 이상 실험 데이터를 입력하면 반영됩니다.';
+        status.className = 'hint status-error';
+      }
+    }
+    renderCalibrationSummary(cfg);
+    runMany();
+  }
+
+  function clearCalibration() {
+    setConfig({
+      realTestTotal: 0,
+      realSuccess: 0,
+      realNoDrop: 0,
+      realDouble: 0,
+      realJam: 0,
+      realSensorFail: 0,
+      realMotorError: 0
+    });
+    const status = document.getElementById('calibrationStatus');
+    if (status) {
+      status.textContent = '실험 데이터 없음';
+      status.className = 'hint';
+    }
+    renderCalibrationSummary(getConfig());
   }
 
   function setJsonStatus(message, isError = false) {
@@ -1542,6 +1674,13 @@
       trialCount: 200,
       seed: 20260512,
       designMode: 'after',
+      realTestTotal: 0,
+      realSuccess: 0,
+      realNoDrop: 0,
+      realDouble: 0,
+      realJam: 0,
+      realSensorFail: 0,
+      realMotorError: 0,
       controlCode: 'retry=1\nmotorRamp=0.75\ndoubleDetect=true\nsensorCheck=true\nalarmOnFail=true\njamRecovery=false'
     });
     runMany();
@@ -1562,6 +1701,8 @@
     document.getElementById('saveJsonBtn').addEventListener('click', saveJson);
     document.getElementById('copyJsonBtn').addEventListener('click', copyJson);
     document.getElementById('applyJsonBtn').addEventListener('click', applyJson);
+    document.getElementById('applyCalibrationBtn').addEventListener('click', applyCalibration);
+    document.getElementById('clearCalibrationBtn').addEventListener('click', clearCalibration);
     document.getElementById('loadExampleBtn').addEventListener('click', loadExample);
     document.getElementById('resetBtn').addEventListener('click', resetDefaults);
     document.getElementById('applyCodeBtn').addEventListener('click', () => applyControlCode(true));

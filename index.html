@@ -287,7 +287,40 @@
       </details>
 
       <details>
-        <summary>9. 설계 가능성 판정 보조 입력</summary>
+        <summary>9. 실물 테스트 데이터 보정</summary>
+        <p class="hint">실제 초안 테스트 횟수와 실패 유형을 입력하면 확률식을 완만하게 보정합니다. 빈 값이나 5회 미만 데이터는 반영하지 않습니다.</p>
+        <div class="grid two">
+          <label>실물 테스트 총 횟수
+            <input id="realTestTotal" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>정확 배출 횟수
+            <input id="realSuccess" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>미배출 횟수
+            <input id="realNoDrop" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>중복 배출 횟수
+            <input id="realDouble" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>알약 걸림 횟수
+            <input id="realJam" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>센서 감지 실패 횟수
+            <input id="realSensorFail" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+          <label>구동 위치 오차 횟수
+            <input id="realMotorError" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+          </label>
+        </div>
+        <div class="mini-actions">
+          <button id="applyCalibrationBtn" class="ghost">실험값 반영</button>
+          <button id="clearCalibrationBtn" class="ghost danger">실험값 초기화</button>
+          <span id="calibrationStatus" class="hint">실험 데이터 없음</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>10. 설계 가능성 판정 보조 입력</summary>
         <p class="hint">실제 JavaScript를 실행하지 않고, 아래 key=value 형식만 해석합니다. 예: retry=1, motorRamp=0.8</p>
         <textarea id="controlCode" rows="7">retry=1
 motorRamp=0.75
@@ -302,7 +335,7 @@ jamRecovery=false</textarea>
       </details>
 
       <details>
-        <summary>10. 설정 JSON 직접 입력</summary>
+        <summary>11. 설정 JSON 직접 입력</summary>
         <p class="hint">Codex나 GPT가 만들어준 JSON을 붙여넣고 적용할 수 있습니다.</p>
         <textarea id="jsonInput" rows="8" placeholder='{"pillDiameter":8.5,"slotSize":10.5,"motorSpeed":18}'></textarea>
         <div class="mini-actions">
@@ -377,6 +410,13 @@ jamRecovery=false</textarea>
       <section class="decision-card checklist-card">
         <h3>설계 전 체크리스트</h3>
         <ul id="designChecklist" class="checklist"></ul>
+      </section>
+
+      <section class="decision-card calibration-card">
+        <h3>실물 테스트 데이터 보정</h3>
+        <div id="calibrationSummary" class="decision-list">
+          <p class="hint">실물 테스트 데이터를 입력하면 모델 보정 상태가 표시됩니다.</p>
+        </div>
       </section>
 
       <div class="table-wrap">
