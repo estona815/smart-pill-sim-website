@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Polytechnic Mechatronics Capstone Simulator</p>
       <h1>정량 배출 기반 스마트 알약/영양제 디스펜서 시뮬레이터</h1>
-      <p class="subtitle">부품 치수, 구비 사항, 센서/모터 조건을 입력하면 배출 성공·미배출·중복 배출·걸림·센서 실패를 가상 검증합니다.</p>
+      <p class="subtitle">부품 치수, 구비 사항, 구동부/센서 조건을 입력하면 배출 성공·미배출·중복 배출·걸림·센서 실패를 가상 검증합니다.</p>
     </div>
     <div class="header-actions">
       <button id="loadExampleBtn" class="ghost">예시값 불러오기</button>
@@ -54,7 +54,7 @@
           <strong id="lastSensor">-</strong>
         </div>
         <div>
-          <span class="label">회전각 오차</span>
+          <span class="label">구동각 오차</span>
           <strong id="lastMotorError">-</strong>
         </div>
       </div>
@@ -72,7 +72,7 @@
           <input id="projectName" type="text" value="개인 맞춤형 영양제 자동 분배 시스템" />
         </label>
         <label>구비 부품/요구사항 메모
-          <textarea id="requirements" rows="4">Raspberry Pi 5, 9인치 HDMI 터치스크린, NEMA17 스텝모터, TB6600 또는 TMC2209, IR Break Beam 센서, A3144 홀센서, 회전 슬롯 휠, 3D 프린팅 저장통</textarea>
+          <textarea id="requirements" rows="4">Raspberry Pi 5, 9인치 HDMI 터치스크린, 서보형 회전 구동부, IR Break Beam 센서, 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 3D 프린팅 구조물, 알약 회수 트레이, 부저 또는 LED 알림</textarea>
         </label>
       </details>
 
@@ -142,28 +142,29 @@
       </details>
 
       <details open>
-        <summary>4. 모터/센서 조건</summary>
+        <summary>4. 구동부/센서 조건</summary>
         <div class="grid two">
-          <label>모터 속도(rpm)
+          <label>구동 방식
+            <select id="driveMode">
+              <option value="servo" selected>서보형 회전 구동부</option>
+              <option value="rotary">단순 회전 모듈</option>
+              <option value="manual">수동 가상 입력</option>
+            </select>
+          </label>
+          <label>동작 속도(rpm)
             <input id="motorSpeed" type="number" min="1" max="120" step="1" value="18" />
           </label>
-          <label>1회 회전각(°)
+          <label>1회 구동각(°)
             <input id="motorAngle" type="number" min="1" max="180" step="0.1" value="45" />
           </label>
-          <label>모터 자체 오차(±°)
-            <input id="motorError" type="number" min="0" max="10" step="0.1" value="1.2" />
+          <label>구동각 오차(±°)
+            <input id="actuatorErrorDeg" type="number" min="0" max="10" step="0.1" value="1.2" />
           </label>
-          <label>스텝/회전
-            <input id="stepsPerRev" type="number" min="50" max="800" step="1" value="200" />
+          <label>기구 유격/백래시(°)
+            <input id="backlashDeg" type="number" min="0" max="15" step="0.1" value="0.8" />
           </label>
-          <label>마이크로스텝
-            <input id="microstep" type="number" min="1" max="256" step="1" value="16" />
-          </label>
-          <label>홀센서 원점 보정
-            <select id="homeSensor">
-              <option value="0">미사용</option>
-              <option value="1" selected>사용</option>
-            </select>
+          <label>전원 안정성 수준(%)
+            <input id="powerStability" type="number" min="0" max="100" step="1" value="85" />
           </label>
           <label>센서 위치 Y(mm)
             <input id="sensorPosition" type="number" min="10" max="160" step="1" value="72" />
@@ -208,8 +209,8 @@
 motorRamp=0.75
 doubleDetect=true
 sensorCheck=true
-homeSensor=true
-alarmOnFail=true</textarea>
+alarmOnFail=true
+jamRecovery=false</textarea>
         <div class="mini-actions">
           <button id="applyCodeBtn" class="ghost">제어 로직 적용</button>
           <span id="codeStatus" class="hint">대기 중</span>
@@ -244,7 +245,7 @@ alarmOnFail=true</textarea>
         <div class="metric"><span>걸림률</span><strong id="mJam">0%</strong></div>
         <div class="metric"><span>센서 실패률</span><strong id="mSensorFail">0%</strong></div>
         <div class="metric"><span>평균 배출 시간</span><strong id="mAvgTime">0.00s</strong></div>
-        <div class="metric"><span>평균 회전각 오차</span><strong id="mMotorErr">0.00°</strong></div>
+        <div class="metric"><span>평균 구동각 오차</span><strong id="mMotorErr">0.00°</strong></div>
       </div>
 
       <div class="charts">
@@ -276,7 +277,7 @@ alarmOnFail=true</textarea>
   </main>
 
   <footer>
-    <p>이 웹앱은 실제 물리엔진이 아니라, 설계 전 검토용 규칙·확률 기반 시뮬레이터입니다. 최종 치수는 실물 테스트로 보정해야 합니다.</p>
+    <p>이 웹앱은 실제 물리엔진이 아니라, 설계 전 검토용 규칙·확률 기반 시뮬레이터입니다. 현재 설계는 외장 모터 드라이버와 원점 보정 센서를 제외하고, 구조 개선 조건에 따른 실패 확률 변화를 비교합니다. 최종 치수와 확률식은 실물 배출 테스트로 보정해야 합니다.</p>
   </footer>
 
   <script src="app.js"></script>

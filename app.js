@@ -4,15 +4,15 @@
   const fieldIds = [
     'projectName', 'requirements', 'pillShape', 'pillCount', 'pillDiameter', 'pillLength', 'pillWeight',
     'hopperAngle', 'friction', 'tolerance', 'slotSize', 'slotCount', 'wheelRadius', 'outletWidth',
-    'edgeChamfer', 'topGuard', 'motorSpeed', 'motorAngle', 'motorError', 'stepsPerRev', 'microstep',
-    'homeSensor', 'sensorPosition', 'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount',
+    'edgeChamfer', 'topGuard', 'driveMode', 'motorSpeed', 'motorAngle', 'actuatorErrorDeg',
+    'backlashDeg', 'powerStability', 'sensorPosition', 'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount',
     'trialCount', 'seed', 'designMode', 'controlCode'
   ];
 
   const numericFields = new Set([
     'pillCount', 'pillDiameter', 'pillLength', 'pillWeight', 'hopperAngle', 'friction', 'tolerance',
     'slotSize', 'slotCount', 'wheelRadius', 'outletWidth', 'edgeChamfer', 'topGuard', 'motorSpeed',
-    'motorAngle', 'motorError', 'stepsPerRev', 'microstep', 'homeSensor', 'sensorPosition',
+    'motorAngle', 'actuatorErrorDeg', 'backlashDeg', 'powerStability', 'sensorPosition',
     'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount', 'trialCount', 'seed'
   ]);
 
@@ -98,8 +98,8 @@
       motorRamp: 0.5,
       doubleDetect: false,
       sensorCheck: true,
-      homeSensor: undefined,
-      alarmOnFail: true
+      alarmOnFail: true,
+      jamRecovery: false
     };
     const lines = String(text || '').split(/\r?\n/);
     for (const rawLine of lines) {
@@ -119,18 +119,16 @@
     parsed.doubleDetect = Boolean(parsed.doubleDetect);
     parsed.sensorCheck = parsed.sensorCheck !== false;
     parsed.alarmOnFail = parsed.alarmOnFail !== false;
+    parsed.jamRecovery = Boolean(parsed.jamRecovery);
     return parsed;
   }
 
   function applyControlCode(showMessage = true) {
     const cfg = getConfig();
     state.control = cfg.control;
-    if (typeof cfg.control.homeSensor === 'boolean') {
-      els.homeSensor.value = cfg.control.homeSensor ? '1' : '0';
-    }
     if (showMessage) {
       const status = document.getElementById('codeStatus');
-      status.textContent = `적용됨: retry=${state.control.retry}, motorRamp=${fmt(state.control.motorRamp, 2)}, doubleDetect=${state.control.doubleDetect}`;
+      status.textContent = `적용됨: retry=${state.control.retry}, motorRamp=${fmt(state.control.motorRamp, 2)}, doubleDetect=${state.control.doubleDetect}, jamRecovery=${state.control.jamRecovery}`;
     }
   }
 
@@ -149,10 +147,12 @@
     const outletClearance = cfg.outletWidth - cfg.pillDiameter;
     const desiredAngle = 360 / Math.max(1, cfg.slotCount);
     const configuredAngleError = Math.abs(cfg.motorAngle - desiredAngle);
-    const homeFactor = (cfg.homeSensor || control.homeSensor === true) ? 0.42 : 1;
     const rampFactor = 1 - clamp(control.motorRamp ?? 0.5, 0, 1) * 0.35;
+    const driveModeFactor = cfg.driveMode === 'servo' ? 0.85 : cfg.driveMode === 'manual' ? 1.18 : 1;
     const toleranceNoise = Math.abs(normalNoise(random)) * cfg.tolerance;
     const speedPenalty = clamp((cfg.motorSpeed - 24) / 80, 0, 0.45);
+    const speedAlignmentPenalty = clamp((cfg.motorSpeed - 26) / 70, 0, 0.55);
+    const powerWeakness = clamp((100 - cfg.powerStability) / 100, 0, 0.75);
     const lowAnglePenalty = clamp((24 - cfg.hopperAngle) / 32, 0, 0.55);
     const lowStockPenalty = clamp((7 - cfg.pillCount) / 10, 0, 0.4);
     const tooSmallPenalty = cfg.slotSize < cfg.pillDiameter ? 0.9 : clamp((0.9 - slotClearance) / 3, 0, 0.45);
@@ -174,12 +174,15 @@
     const outletTooNarrow = clamp((cfg.pillDiameter + 1.2 - cfg.outletWidth) / 5, 0, 0.7);
     const chamferBonus = Number(cfg.edgeChamfer) * 0.055;
     let jamP = 0.05 + cfg.friction * 0.36 + outletTooNarrow * 0.48 + speedPenalty * 0.28 + lowAnglePenalty * 0.16 + shapePenalty;
-    jamP -= chamferBonus + (designAfter ? 0.055 : 0) + clamp(control.motorRamp || 0, 0, 1) * 0.055;
+    jamP -= chamferBonus + (designAfter ? 0.055 : 0) + clamp(control.motorRamp || 0, 0, 1) * 0.055 + (control.jamRecovery ? 0.035 : 0);
     jamP = clamp(jamP, 0.004, 0.82);
 
-    const motorRandomError = cfg.motorError * homeFactor * rampFactor + toleranceNoise * 0.7;
-    const totalAngleError = configuredAngleError + motorRandomError;
-    const motorFailP = clamp((totalAngleError - 2.2) / 9, 0, 0.75);
+    const actuatorRandomError = cfg.actuatorErrorDeg * driveModeFactor * rampFactor + toleranceNoise * 0.7;
+    const backlashError = Math.max(0, cfg.backlashDeg) * (0.55 + speedAlignmentPenalty * 0.45);
+    const speedAlignmentError = speedAlignmentPenalty * 2.4;
+    const powerAlignmentError = powerWeakness * 3.2;
+    const totalIndexingAngleError = configuredAngleError + actuatorRandomError + backlashError + speedAlignmentError + powerAlignmentError;
+    const motorFailP = clamp((totalIndexingAngleError - 2.2) / 9, 0, 0.75) + powerWeakness * 0.12;
 
     const dropSpeed = Math.max(0.1, cfg.motorSpeed / 18);
     const passTimeMs = clamp((cfg.sensorRange + cfg.pillDiameter) * 7 / dropSpeed, 8, 280);
@@ -197,9 +200,9 @@
       fillP,
       doubleP,
       jamP,
-      motorFailP,
+      motorFailP: clamp(motorFailP, 0, 0.85),
       sensorP,
-      totalAngleError,
+      indexingAngleError: totalIndexingAngleError,
       desiredAngle,
       slotClearance,
       effectiveClearance,
@@ -221,7 +224,7 @@
       attempts += 1;
       motorFailed = random() < probs.motorFailP;
       if (motorFailed) {
-        noDropReason = '회전각 오차로 슬롯-배출구 미정렬';
+        noDropReason = '구동각 오차/유격/출력 부족으로 슬롯-배출구 미정렬';
         break;
       }
       filled = random() < probs.fillP;
@@ -279,7 +282,7 @@
     }
 
     const duration = probs.cycleTimeSec * attempts + Math.abs(normalNoise(random)) * 0.08;
-    const motorError = probs.totalAngleError + Math.abs(normalNoise(random)) * cfg.motorError * 0.2;
+    const indexingAngleError = probs.indexingAngleError + Math.abs(normalNoise(random)) * cfg.actuatorErrorDeg * 0.2;
 
     return {
       trial: trialIndex,
@@ -294,7 +297,7 @@
       motorFailed,
       attempts,
       duration,
-      motorError,
+      indexingAngleError,
       probs
     };
   }
@@ -310,7 +313,7 @@
       motor_error: 0
     };
     let sumDuration = 0;
-    let sumMotor = 0;
+    let sumIndexingAngle = 0;
     let sensorDetectable = 0;
     let sensorDetected = 0;
 
@@ -326,7 +329,7 @@
         if (r.sensorCount > 0) sensorDetected += 1;
       }
       sumDuration += r.duration;
-      sumMotor += r.motorError;
+      sumIndexingAngle += r.indexingAngleError;
     }
 
     const failure = total - counts.success;
@@ -341,7 +344,7 @@
       motorErrorRate: total ? counts.motor_error / total : 0,
       failureRate: total ? failure / total : 0,
       avgDuration: total ? sumDuration / total : 0,
-      avgMotorError: total ? sumMotor / total : 0,
+      avgIndexingAngleError: total ? sumIndexingAngle / total : 0,
       sensorSuccessRate: sensorDetectable ? sensorDetected / sensorDetectable : 0,
       cfg
     };
@@ -373,7 +376,7 @@
       actualDrop: r.actualDrop,
       sensorCount: r.sensorCount,
       durationSec: r.duration.toFixed(3),
-      motorErrorDeg: r.motorError.toFixed(3),
+      indexingAngleErrorDeg: r.indexingAngleError.toFixed(3),
       fillP: r.probs.fillP.toFixed(4),
       doubleP: r.probs.doubleP.toFixed(4),
       jamP: r.probs.jamP.toFixed(4),
@@ -396,10 +399,12 @@
       slotSize: Math.max(3, base.slotSize - 1.2),
       outletWidth: Math.max(3, base.outletWidth - 0.8),
       motorSpeed: base.motorSpeed + 8,
+      actuatorErrorDeg: base.actuatorErrorDeg + 0.6,
+      backlashDeg: base.backlashDeg + 0.5,
+      powerStability: Math.max(35, base.powerStability - 15),
       sensorPosition: base.sensorPosition + 18,
       edgeChamfer: 0,
-      topGuard: 0,
-      homeSensor: 0
+      topGuard: 0
     };
     const afterConfig = {
       ...base,
@@ -407,9 +412,11 @@
       slotSize: base.slotSize,
       outletWidth: base.outletWidth,
       motorSpeed: Math.max(6, base.motorSpeed),
+      actuatorErrorDeg: Math.max(0.2, base.actuatorErrorDeg),
+      backlashDeg: Math.max(0, base.backlashDeg),
+      powerStability: Math.max(75, base.powerStability),
       edgeChamfer: Math.max(1, base.edgeChamfer),
-      topGuard: 1,
-      homeSensor: 1
+      topGuard: 1
     };
     const before = runBatch(beforeConfig, 11);
     const after = runBatch(afterConfig, 19);
@@ -427,7 +434,7 @@
     document.getElementById('mJam').textContent = fmtPct(m.jamRate);
     document.getElementById('mSensorFail').textContent = fmtPct(m.sensorFailRate);
     document.getElementById('mAvgTime').textContent = `${fmt(m.avgDuration, 2)}s`;
-    document.getElementById('mMotorErr').textContent = `${fmt(m.avgMotorError, 2)}°`;
+    document.getElementById('mMotorErr').textContent = `${fmt(m.avgIndexingAngleError, 2)}°`;
     const badge = document.getElementById('summaryBadge');
     badge.textContent = m.successRate >= 0.9 ? '양호' : m.successRate >= 0.75 ? '보완 필요' : '위험';
     badge.className = m.successRate >= 0.9 ? 'badge success' : 'badge';
@@ -440,12 +447,12 @@
       double_drop: '중복 배출',
       jam: '걸림',
       sensor_fail: '센서 실패',
-      motor_error: '모터 오차'
+      motor_error: '구동 위치 오차'
     };
     document.getElementById('lastStatus').textContent = r ? `${statusMap[r.status] || r.status} · ${r.reason}` : '대기 중';
     document.getElementById('lastDrop').textContent = r ? `${r.actualDrop}개` : '-';
     document.getElementById('lastSensor').textContent = r ? `${r.sensorCount}회` : '-';
-    document.getElementById('lastMotorError').textContent = r ? `${fmt(r.motorError, 2)}°` : '-';
+    document.getElementById('lastMotorError').textContent = r ? `${fmt(r.indexingAngleError, 2)}°` : '-';
   }
 
   function updateDiagnosis(m) {
@@ -724,7 +731,8 @@
       `알약: ${shapeLabel(cfg.pillShape)} / ${cfg.pillDiameter}×${cfg.pillLength}mm`,
       `슬롯: ${cfg.slotSize}mm / ${cfg.slotCount}칸`,
       `배출구: ${cfg.outletWidth}mm`,
-      `모터: ${cfg.motorSpeed}rpm / ${cfg.motorAngle}°`,
+      `구동부: ${driveModeLabel(cfg.driveMode)} / ${cfg.motorSpeed}rpm`,
+      `구동각: ${cfg.motorAngle}° / 유격 ${cfg.backlashDeg}°`,
       `센서: 범위 ${cfg.sensorRange}mm / 반응 ${cfg.sensorResponse}ms`,
       `충전확률: ${fmtPct(probs.fillP)}`,
       `중복확률: ${fmtPct(probs.doubleP)}`,
@@ -822,7 +830,7 @@
       double_drop: '중복 배출',
       jam: '알약 걸림',
       sensor_fail: '센서 감지 실패',
-      motor_error: '모터 위치 오차'
+      motor_error: '구동 위치 오차'
     }[status] || status;
   }
 
@@ -839,6 +847,10 @@
 
   function shapeLabel(shape) {
     return { round: '원형', oval: '타원형', capsule: '캡슐형' }[shape] || shape;
+  }
+
+  function driveModeLabel(mode) {
+    return { servo: '서보형', rotary: '회전 모듈', manual: '수동 가상' }[mode] || mode;
   }
 
   function animateOne() {
@@ -938,7 +950,7 @@
   function loadExample() {
     setConfig({
       projectName: '취약계층용 스마트 캡슐 알약 디스펜서',
-      requirements: 'Raspberry Pi 5 단독 제어, 9인치 HDMI 터치스크린, NEMA17 스텝모터, TB6600/TMC2209 드라이버, IR Break Beam 낙하 센서, A3144 홀센서 원점 보정, 3D 프린팅 회전 슬롯 휠',
+      requirements: 'Raspberry Pi 5, 9인치 HDMI 터치스크린, 서보형 회전 구동부, IR Break Beam 센서, 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 3D 프린팅 구조물, 알약 회수 트레이, 부저 또는 LED 알림',
       pillShape: 'capsule',
       pillCount: 24,
       pillDiameter: 8.5,
@@ -953,12 +965,12 @@
       outletWidth: 12,
       edgeChamfer: 1,
       topGuard: 1,
+      driveMode: 'servo',
       motorSpeed: 18,
       motorAngle: 45,
-      motorError: 1.2,
-      stepsPerRev: 200,
-      microstep: 16,
-      homeSensor: 1,
+      actuatorErrorDeg: 1.2,
+      backlashDeg: 0.8,
+      powerStability: 85,
       sensorPosition: 72,
       sensorRange: 8,
       sensorResponse: 20,
@@ -967,7 +979,7 @@
       trialCount: 200,
       seed: 20260512,
       designMode: 'after',
-      controlCode: 'retry=1\nmotorRamp=0.75\ndoubleDetect=true\nsensorCheck=true\nhomeSensor=true\nalarmOnFail=true'
+      controlCode: 'retry=1\nmotorRamp=0.75\ndoubleDetect=true\nsensorCheck=true\nalarmOnFail=true\njamRecovery=false'
     });
     runMany();
     runCompare();
