@@ -4,15 +4,17 @@
   const fieldIds = [
     'projectName', 'requirements', 'pillShape', 'pillCount', 'pillDiameter', 'pillLength', 'pillWeight',
     'hopperAngle', 'friction', 'tolerance', 'slotSize', 'slotCount', 'wheelRadius', 'outletWidth',
-    'edgeChamfer', 'topGuard', 'driveMode', 'motorSpeed', 'motorAngle', 'actuatorErrorDeg',
-    'backlashDeg', 'powerStability', 'sensorPosition', 'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount',
+    'edgeChamfer', 'topGuard', 'actuatorType', 'driveControl', 'driveMode', 'motorSpeed', 'motorAngle',
+    'actuatorErrorDeg', 'backlashDeg', 'servoTorqueMargin', 'powerStability', 'homeMode',
+    'piPowerSource', 'servoPowerSource', 'use24vSupply', 'buckConverter', 'buckVoltage', 'buckCurrent',
+    'commonGnd', 'dischargeSensor', 'sensorPosition', 'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount',
     'trialCount', 'seed', 'designMode', 'controlCode'
   ];
 
   const numericFields = new Set([
     'pillCount', 'pillDiameter', 'pillLength', 'pillWeight', 'hopperAngle', 'friction', 'tolerance',
     'slotSize', 'slotCount', 'wheelRadius', 'outletWidth', 'edgeChamfer', 'topGuard', 'motorSpeed',
-    'motorAngle', 'actuatorErrorDeg', 'backlashDeg', 'powerStability', 'sensorPosition',
+    'motorAngle', 'actuatorErrorDeg', 'backlashDeg', 'servoTorqueMargin', 'powerStability', 'buckVoltage', 'buckCurrent', 'sensorPosition',
     'sensorRange', 'sensorResponse', 'sensorDebounce', 'targetCount', 'trialCount', 'seed'
   ]);
 
@@ -89,7 +91,8 @@
     const warnings = [];
     if (cfg.slotSize <= 0 || cfg.outletWidth <= 0) warnings.push('슬롯과 배출구 치수는 0보다 커야 합니다.');
     if (cfg.trialCount > 3000) warnings.push('반복 횟수가 많으면 저사양 브라우저에서 시간이 걸릴 수 있습니다.');
-    if (cfg.sensorRange < 2) warnings.push('IR 센서 감지 범위가 너무 좁습니다.');
+    if (cfg.sensorRange < 2) warnings.push('토출부 포토센서/IR 감지 범위가 너무 좁습니다.');
+    if (cfg.dischargeSensor !== 'yes') warnings.push('토출부 포토센서/IR이 없으면 배출 성공 확인이 불가능합니다.');
     return warnings;
   }
 
@@ -150,6 +153,67 @@
     return Math.max(cfg.pillDiameter, cfg.pillLength * 0.50);
   }
 
+  function isYes(value) {
+    return value === true || value === 'yes' || value === '1' || value === 1;
+  }
+
+  function addPowerItem(items, status, reason, suggestion) {
+    items.push({ name: '전원 연결 위험 판정', status, reason, suggestion });
+  }
+
+  function powerCheck(cfg) {
+    const items = [];
+    let riskScore = 0;
+
+    if (cfg.piPowerSource === 'dc_24v_direct') {
+      addPowerItem(items, 'danger', 'Raspberry Pi 5는 24V 직접 입력이 불가능하며 5V/5A USB-C 전원이 필요함', 'Raspberry Pi는 별도 5V/5A USB-C 전원을 사용');
+      riskScore += 0.55;
+    } else {
+      addPowerItem(items, 'good', 'Raspberry Pi 전원은 5V/5A USB-C 기준으로 설정되어 있습니다.', 'Pi 전원과 서보 전원은 분리하고 신호 기준 GND만 맞추세요.');
+    }
+
+    if (cfg.servoPowerSource === 'dc_24v_direct') {
+      addPowerItem(items, 'danger', 'MG996R 서보모터는 일반적으로 4.8V~7.2V 범위에서 사용되며 24V 직접 연결 시 고장 위험이 큼', '24V -> DC-DC Buck 컨버터 -> 6V / 3A~5A로 변환 후 서보에 공급');
+      riskScore += 0.6;
+    } else if (cfg.servoPowerSource === 'pi_5v_pin') {
+      addPowerItem(items, 'risk', 'MG996R은 순간 전류가 커서 Raspberry Pi 전압 강하, 재부팅, GPIO 불안정이 발생할 수 있음', '서보모터는 별도 6V 전원에서 공급하고 Raspberry Pi는 PWM 신호만 전달');
+      riskScore += 0.32;
+    } else if (cfg.servoPowerSource === 'buck_6v') {
+      addPowerItem(items, 'medium', '24V 전원을 사용할 경우 Buck 컨버터 출력 전압과 전류 용량이 서보 안정성을 좌우합니다.', 'Buck 출력은 6V 근처, 최소 3A 이상으로 설정하세요.');
+      riskScore += 0.08;
+    } else {
+      addPowerItem(items, 'good', '서보모터 전원은 별도 6V 공급 기준으로 설정되어 있습니다.', '부하 시 전압 강하가 없는지 실측하세요.');
+    }
+
+    if (!isYes(cfg.commonGnd)) {
+      addPowerItem(items, 'risk', 'Raspberry Pi PWM 신호와 서보 전원의 기준 GND가 달라 신호 인식 오류 가능', 'Raspberry Pi GND와 서보 전원 GND를 공통 연결');
+      riskScore += 0.22;
+    }
+
+    if (isYes(cfg.use24vSupply) || cfg.servoPowerSource === 'buck_6v') {
+      if (!isYes(cfg.buckConverter)) {
+        addPowerItem(items, 'risk', '24V 파워서플라이를 쓰면서 Buck 컨버터 사용이 꺼져 있습니다.', '24V를 직접 연결하지 말고 Buck 컨버터로 6V를 만드세요.');
+        riskScore += 0.28;
+      }
+      if (cfg.buckVoltage < 5 || cfg.buckVoltage > 6.5) {
+        addPowerItem(items, 'risk', 'MG996R에 적절하지 않은 전압', '6V 근처로 설정');
+        riskScore += 0.18;
+      }
+      if (cfg.buckCurrent < 3) {
+        addPowerItem(items, 'risk', '서보 부하 시 전류 부족 가능', '최소 3A, 가능하면 5A급 Buck 컨버터 사용');
+        riskScore += 0.18;
+      }
+    }
+
+    return { items, riskScore: clamp(riskScore, 0, 1) };
+  }
+
+  function calcPowerRisk(cfg) {
+    const explicitRisk = powerCheck(cfg).riskScore;
+    const stabilityRisk = clamp((100 - cfg.powerStability) / 100, 0, 0.85);
+    return clamp(Math.max(explicitRisk, stabilityRisk * 0.75), 0, 1);
+  }
+
   function getDesignFactors(cfg, random = Math.random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
     const control = cfg.control || parseControlCode(cfg.controlCode || '');
     const effectiveSize = effectivePillSize(cfg);
@@ -160,7 +224,7 @@
     const configuredAngleError = Math.abs(cfg.motorAngle - desiredAngle);
     const ramp = clamp(control.motorRamp ?? 0.5, 0, 1);
     const rampFactor = 1 - ramp * 0.35;
-    const driveModeFactor = cfg.driveMode === 'servo' ? 0.88 : cfg.driveMode === 'manual' ? 1.2 : 1;
+    const driveModeFactor = cfg.driveMode === 'servo' ? 0.92 : cfg.driveMode === 'manual' ? 1.2 : 1;
     const toleranceNoise = Math.abs(normalNoise(random)) * cfg.tolerance;
     const speedStress = clamp((cfg.motorSpeed - 22) / 65, 0, 0.65);
     const lowAnglePenalty = clamp((26 - cfg.hopperAngle) / 30, 0, 0.7);
@@ -168,9 +232,11 @@
     const lowStockPenalty = clamp((7 - cfg.pillCount) / 10, 0, 0.4);
     const shapeSensitivity = cfg.pillShape === 'capsule' ? 1.25 : cfg.pillShape === 'oval' ? 1.12 : 1;
     const shapePenalty = cfg.pillShape === 'capsule' ? 0.08 : cfg.pillShape === 'oval' ? 0.045 : 0;
-    const powerWeakness = clamp((100 - cfg.powerStability) / 100, 0, 0.85);
+    const powerWeakness = calcPowerRisk(cfg);
+    const servoTorqueWeakness = clamp((55 - cfg.servoTorqueMargin) / 70, 0, 0.75);
+    const homeRisk = cfg.homeMode === 'none' ? 1 : cfg.homeMode === 'manual_mark' ? 0.58 : cfg.homeMode === 'physical_stop' ? 0.25 : 0.38;
     const trialProgress = clamp((trialIndex - 1) / Math.max(1, totalTrials - 1), 0, 1);
-    const cumulativeDrift = trialProgress * clamp(totalTrials / 1000, 0, 1.4) * (0.32 + cfg.backlashDeg * 0.055 + powerWeakness * 0.55);
+    const cumulativeDrift = trialProgress * clamp(totalTrials / 1000, 0, 1.4) * (0.32 + cfg.backlashDeg * 0.055 + powerWeakness * 0.55 + homeRisk * 0.42);
     const idealSlotClearance = cfg.pillShape === 'capsule' ? cfg.pillDiameter * 0.28 : cfg.pillDiameter * 0.2;
     const idealOutletClearance = effectiveSize * 0.2;
     const slotTooTight = clamp((idealSlotClearance - slotClearance) / Math.max(1.2, idealSlotClearance), 0, 1);
@@ -212,6 +278,8 @@
       shapeSensitivity,
       shapePenalty,
       powerWeakness,
+      servoTorqueWeakness,
+      homeRisk,
       cumulativeDrift,
       idealSlotClearance,
       idealOutletClearance,
@@ -239,7 +307,7 @@
     fillP -= f.slotTooTight * 0.5 * f.shapeSensitivity;
     fillP -= f.lowAnglePenalty * 0.34 + f.highAnglePenalty * 0.08;
     fillP -= cfg.friction * 0.24 + f.lowStockPenalty * 0.35 + f.tolerancePenalty * 0.09 + f.toleranceNoisePenalty;
-    fillP -= f.shapePenalty + f.powerWeakness * 0.12;
+    fillP -= f.shapePenalty + f.powerWeakness * 0.14 + f.servoTorqueWeakness * 0.16;
     fillP += cfg.topGuard ? 0.025 : -0.02;
     return clamp(fillP, 0.03, 0.98);
   }
@@ -251,6 +319,7 @@
     doubleP += f.outletTooWide * 0.18;
     doubleP += f.guardMissing * 0.14;
     doubleP += f.speedStress * 0.08;
+    doubleP += cfg.pillShape === 'capsule' || cfg.pillShape === 'oval' ? f.slotTooLoose * 0.04 : 0;
     doubleP += cfg.targetCount > 1 ? 0.03 * (cfg.targetCount - 1) : 0;
     doubleP -= cfg.topGuard ? 0.08 : 0;
     doubleP -= f.edgeLevel * 0.01;
@@ -264,7 +333,7 @@
     jamP += f.outletTooTight * 0.52 * f.shapeSensitivity;
     jamP += f.slotTooTight * 0.18;
     jamP += cfg.friction * 0.26 + f.tolerancePenalty * 0.13 + frictionToleranceCoupling;
-    jamP += f.speedStress * 0.22 + f.shapePenalty + f.lowAnglePenalty * 0.08;
+    jamP += f.speedStress * 0.22 + f.shapePenalty + f.lowAnglePenalty * 0.08 + f.servoTorqueWeakness * 0.18;
     jamP -= f.edgeLevel * 0.065;
     jamP -= f.ramp * 0.045;
     jamP -= f.control.jamRecovery ? 0.035 : 0;
@@ -274,6 +343,7 @@
   function calcSensorProbability(cfg, f) {
     // 센서 실패는 감지 범위, 위치, 반응시간, 디바운스, 낙하 속도 조건이 나쁠수록 증가한다.
     let sensorP = 0.965;
+    if (cfg.dischargeSensor !== 'yes') return 0.08;
     sensorP -= f.responsePenalty + f.rangePenalty + f.positionPenalty;
     sensorP -= f.debounceNoisePenalty + f.debounceMergePenalty;
     sensorP -= f.speedStress * 0.04;
@@ -287,7 +357,9 @@
     const backlashError = Math.max(0, cfg.backlashDeg) * (0.6 + f.speedStress * 0.5);
     const speedAlignmentError = f.speedStress * 2.2 * (1 - f.ramp * 0.32);
     const powerAlignmentError = f.powerWeakness * 3.4;
-    const indexingAngleError = f.configuredAngleError + actuatorRandomError + backlashError + speedAlignmentError + powerAlignmentError + f.cumulativeDrift;
+    const torqueAlignmentError = f.servoTorqueWeakness * 2.6;
+    const homeAlignmentError = f.homeRisk * 1.25;
+    const indexingAngleError = f.configuredAngleError + actuatorRandomError + backlashError + speedAlignmentError + powerAlignmentError + torqueAlignmentError + homeAlignmentError + f.cumulativeDrift;
     const motorFailP = clamp((indexingAngleError - 2.4) / 9.5, 0, 0.74) + f.powerWeakness * 0.1;
     return { indexingAngleError, motorFailP: clamp(motorFailP, 0, 0.86) };
   }
@@ -453,46 +525,38 @@
   }
 
   function statusWeight(status) {
-    return { good: 0, medium: 1, risk: 2, mismatch: 3 }[status] ?? 1;
+    return { good: 0, medium: 1, risk: 2, danger: 3, mismatch: 3 }[status] ?? 1;
   }
 
   function feasibilityCheck(cfg) {
     const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 1201), Math.max(1, Math.round((cfg.trialCount || 200) * 0.75)), cfg.trialCount || 200);
     const f = p.factors;
-    const normalizedMemo = String(cfg.requirements || '').toLowerCase().replace(/\s+/g, '');
-    const incompatibleDriveMention = ['ne' + 'ma17', 'tb' + '6600', 'tmc' + '2209', 'micro' + 'step', 'steps' + 'perrev'].some(term => normalizedMemo.includes(term));
-    const incompatibleHomeMention = ['a' + '3144', 'ha' + 'll', '홀' + '센서'].some(term => normalizedMemo.includes(term));
+    const power = powerCheck(cfg);
     const items = [];
 
     function add(name, status, reason, suggestion) {
       items.push({ name, status, reason, suggestion });
     }
 
-    if (incompatibleDriveMention) {
-      add('구동부 현실성', 'mismatch', '구비 메모에 현재 전제와 맞지 않는 외장 드라이버 또는 대형 스텝 구동 표현이 포함되어 있습니다.', '서보형 회전 구동부 또는 저전력 감속 회전 모듈 기준으로 메모와 설계를 정리하세요.');
+    if (cfg.actuatorType === 'mg996r') {
+      add('구동부 현실성', cfg.servoTorqueMargin >= 55 ? 'medium' : 'risk',
+        `MG996R 서보모터 기준이며 서보 토크 여유 가정은 ${cfg.servoTorqueMargin}%입니다.`,
+        'Raspberry Pi는 PWM 신호만 전달하고, 서보 전원은 별도 6V 또는 Buck 변환 6V로 공급하세요.');
     } else if (cfg.driveMode === 'servo') {
-      add('구동부 현실성', 'medium', '서보형 회전 구동부는 방향성이 맞지만, Raspberry Pi GPIO에서 모터 전원을 직접 공급하면 안 됩니다.', '서보 신호는 GPIO로 제어하고 모터 전원은 별도 5V/6V 전원으로 분리하세요.');
-    } else if (cfg.driveMode === 'rotary') {
-      add('구동부 현실성', 'medium', '단순 회전 모듈은 가능하지만 정지 위치 반복성이 구동부 사양에 크게 좌우됩니다.', '감속비가 있는 회전 모듈과 기계적 정지 구조를 함께 검토하세요.');
+      add('구동부 현실성', 'medium', '기타 서보형 회전 구동부는 가능하지만 토크, 각도 반복성, 전류 요구량을 사양서로 확인해야 합니다.', '구동각 제어 범위와 정지 반복성을 실물 부하에서 측정하세요.');
     } else {
       add('구동부 현실성', 'risk', '수동 가상 입력은 시뮬레이션 검토에는 가능하지만 자동 디스펜서 구동부로는 부족합니다.', '자동 구동이 필요하면 위치 제어 가능한 회전 구동부를 선택하세요.');
     }
 
-    add('전원 구성 안정성', cfg.powerStability >= 80 ? 'good' : cfg.powerStability >= 65 ? 'medium' : 'risk',
-      `전원 안정성 가정이 ${cfg.powerStability}%이며 낮을수록 구동 위치 오차와 미배출 위험이 커집니다.`,
-      cfg.powerStability >= 80 ? 'Raspberry Pi와 구동부 전원을 분리한 현재 가정을 유지하세요.' : '구동부 별도 전원, 공통 GND, 전원 스위치와 보호 회로를 확인하세요.');
+    for (const item of power.items) items.push(item);
 
-    if (incompatibleHomeMention) {
-      add('원점 보정 안정성', 'mismatch', '구비 메모에 현재 미사용 전제인 원점 센서 표현이 포함되어 있습니다.', '미사용을 유지한다면 수동 초기 정렬, 물리적 홈 스토퍼, 리미트 스위치 대안을 명확히 표시하세요.');
-    } else {
-      add('원점 보정 안정성', cfg.trialCount > 800 || p.indexingAngleError > 3.5 ? 'risk' : 'medium',
-        '별도 원점 센서를 쓰지 않으므로 반복 구동 시 누적 오차 가능성이 남습니다.',
-        '전원 인가 시 초기 정렬 절차, 물리적 홈 위치 표시, 리미트 스위치 선택지를 검토하세요.');
-    }
+    add('원점 보정 없음에 따른 누적 오차 위험', cfg.homeMode === 'none' || cfg.trialCount > 800 || p.indexingAngleError > 3.5 ? 'risk' : 'medium',
+      '현재 초안은 휠 기준 위치를 자동으로 읽지 않으므로 전원 재시작 후 기준 위치를 스스로 알 수 없고, 걸림 이후 위치 틀어짐도 감지하기 어렵습니다.',
+      '1~10회 단기 데모는 수동 초기 정렬로 가능하지만 장시간 운용 전에는 표시선, 물리적 홈 스토퍼, 리미트 스위치 검토, 시작 전 기준 위치 확인 절차가 필요합니다.');
 
-    add('IR 센서 감지 안정성', p.sensorP >= 0.9 ? 'good' : p.sensorP >= 0.78 ? 'medium' : 'risk',
-      `IR 감지 확률 추정값은 ${fmtPct(p.sensorP)}입니다. 센서 하나만으로 중복 배출을 100% 보장하기는 어렵습니다.`,
-      p.sensorP >= 0.9 ? '센서 브래킷을 조정 가능하게 설계하세요.' : '센서 위치, 감지 범위, 반응 시간, 디바운스 값을 재검토하세요.');
+    add('포토센서 감지 안정성 판정', cfg.dischargeSensor === 'yes' && p.sensorP >= 0.9 ? 'good' : cfg.dischargeSensor === 'yes' && p.sensorP >= 0.78 ? 'medium' : 'risk',
+      `토출부 포토센서/IR 감지 확률 추정값은 ${fmtPct(p.sensorP)}입니다. 이 센서는 배출 여부 확인용이며 휠 기준 위치 확인용이 아닙니다.`,
+      p.sensorP >= 0.9 ? '센서를 토출부 바로 아래에 고정하고 알약이 빔을 반드시 지나가도록 낙하 경로를 제한하세요.' : '센서 브래킷, 좁은 낙하 통로, 반응 시간, 디바운스 값을 실험으로 보정하세요.');
 
     add('슬롯/알약 치수 적합성', f.slotTooTight > 0.35 || f.slotTooLoose > 0.45 ? 'risk' : f.slotTooTight > 0.15 || f.slotTooLoose > 0.25 ? 'medium' : 'good',
       `슬롯 여유는 ${fmt(p.slotClearance, 2)}mm입니다.`,
@@ -527,32 +591,39 @@
   function recommendParts(cfg, feasibility) {
     const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 1409));
     const recommendations = [];
-    const memo = String(cfg.requirements || '').toLowerCase().replace(/\s+/g, '');
-    const mentionsIncompatibleDrive = ['ne' + 'ma17', 'tb' + '6600', 'tmc' + '2209'].some(term => memo.includes(term));
-    if (mentionsIncompatibleDrive || cfg.driveMode === 'manual') {
-      recommendations.push(['구동부', '현재 조건과 불일치 가능성이 있습니다. 고토크 서보모터 또는 감속 회전 모듈 기반 슬롯 구조를 권장합니다. 모터 전원은 Raspberry Pi와 분리하세요.']);
+    if (cfg.driveMode === 'manual') {
+      recommendations.push(['구동부', '자동 구동 초안에는 MG996R 서보모터 또는 동등한 서보형 회전 구동부가 필요합니다. 모터 전원은 Raspberry Pi와 분리하세요.']);
     } else if (cfg.driveMode === 'servo') {
-      recommendations.push(['구동부', '서보형 회전 구동부 방향은 조건부 가능입니다. 별도 5V/6V 전원, 공통 GND, 충분한 토크 여유를 확인하세요.']);
+      recommendations.push(['구동부', 'MG996R 서보모터 방향은 단기 데모 기준 조건부 가능입니다. 별도 6V 전원, 공통 GND, 충분한 토크 여유를 확인하세요.']);
     } else {
-      recommendations.push(['구동부', '저전력 감속 회전 모듈은 가능하지만 위치 반복성이 핵심입니다. 기계적 정지 구조나 초기 정렬 기준을 추가하세요.']);
+      recommendations.push(['구동부', '서보형 회전 구동부는 위치 반복성이 핵심입니다. 기계적 정지 구조나 초기 정렬 기준을 추가하세요.']);
+    }
+
+    recommendations.push(['필수 부품', 'Raspberry Pi 5, 5V/5A USB-C 전원, MG996R 서보모터, 별도 6V 서보 전원 또는 24V 사용 시 6V / 3A~5A Buck 컨버터, 토출부 포토센서/IR, 센서 고정 브래킷, 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 알약 회수 트레이, 배선 커넥터, 공통 GND 연결을 기본 구성으로 두세요.']);
+    recommendations.push(['권장 부품', '물리적 홈 스토퍼, 수동 초기 정렬 표시선, 부저 또는 LED 알림, 전원 스위치, 케이스, 퓨즈 또는 보호 회로, PETG 재질 검토를 추가 후보로 두세요.']);
+    recommendations.push(['현재 제외', '대형 회전 구동부용 별도 제어 모듈, 자동 기준 위치 센서, 세밀 분할 구동 제어는 현재 초안 범위에서 제외합니다.']);
+
+    const power = powerCheck(cfg);
+    const powerWorst = power.items.sort((a, b) => statusWeight(b.status) - statusWeight(a.status))[0];
+    if (powerWorst && statusWeight(powerWorst.status) >= 2) {
+      recommendations.push(['전원', `${powerWorst.reason} ${powerWorst.suggestion}`]);
+    } else {
+      recommendations.push(['전원', 'Raspberry Pi는 5V/5A USB-C, MG996R은 별도 6V 전원으로 분리하고 두 전원의 GND를 공통 연결하세요.']);
     }
 
     recommendations.push(['원점 보정', cfg.trialCount > 800 || p.indexingAngleError > 3.5
-      ? '별도 원점 센서 미사용 조건에서는 누적 오차 위험이 있습니다. 물리적 홈 위치 표시, 수동 초기 정렬, 리미트 스위치 선택지를 검토하세요.'
-      : '미사용을 유지할 수 있지만, 전원 인가 시 초기 정렬 절차와 물리적 기준 표시를 추가하는 편이 좋습니다.']);
+      ? '자동 기준 위치 확인이 없는 조건에서는 누적 오차 위험이 있습니다. 물리적 홈 위치 표시, 수동 초기 정렬, 리미트 스위치 선택지를 검토하세요.'
+      : '1~10회 단기 데모는 수동 초기 정렬로 가능하지만, 전원 인가 시 초기 정렬 절차와 물리적 기준 표시를 추가하는 편이 좋습니다.']);
 
     recommendations.push(['센서', p.sensorP < 0.9
-      ? 'IR Break Beam은 유지하되 브래킷을 조정 가능하게 만들고, 센서 위치/범위/디바운스 값을 실험으로 보정하세요.'
-      : 'IR Break Beam은 낙하 감지에는 적합합니다. 다만 수량 100% 보장은 어려우므로 중복 배출 실험을 따로 진행하세요.']);
+      ? '토출부 포토센서/IR은 유지하되 브래킷을 조정 가능하게 만들고, 센서 위치/범위/디바운스 값을 실험으로 보정하세요.'
+      : '토출부 포토센서/IR은 낙하 감지에는 적합합니다. 다만 2개가 붙어 나오면 1개로 오인할 수 있으므로 중복 배출 실험을 따로 진행하세요.']);
 
     recommendations.push(['안전/사용성', '비상 정지 버튼, 부저 또는 LED 알림, 알약 회수 트레이, 전원 스위치, 퓨즈 또는 전원 보호 회로, 케이스 내부 배선 정리를 추가 후보로 두세요.']);
     recommendations.push(['기구/재질', cfg.tolerance > 0.35 || cfg.friction > 0.45
       ? 'PLA/PETG 출력 후 표면 마감과 배출구 모서리 보정이 중요합니다. 마찰이 높으면 걸림 실험을 우선하세요.'
       : 'PLA/PETG 모두 검토 가능하지만, 실제 알약 표면과 접촉하는 부분은 마찰 테스트가 필요합니다.']);
 
-    if (feasibility.overall === 'mismatch') {
-      recommendations.unshift(['우선 정리', '구비 메모에 현재 전제와 맞지 않는 부품 표현이 있습니다. 웹 입력과 실제 부품 리스트를 먼저 일치시키세요.']);
-    }
     return recommendations;
   }
 
@@ -576,7 +647,7 @@
         detail: `배출구 여유 ${fmt(p.outletClearance, 2)}mm, 모서리 보정 ${cfg.edgeChamfer}, 속도 ${cfg.motorSpeed}rpm`
       },
       {
-        label: 'IR 센서 감지 조건',
+        label: '포토센서/IR 감지 조건',
         score: (counts.sensor_fail / Math.max(1, total)) + f.rangePenalty * 0.18 + f.positionPenalty * 0.16 + f.responsePenalty * 0.16 + f.debounceMergePenalty * 0.12,
         detail: `센서 위치 ${cfg.sensorPosition}mm, 범위 ${cfg.sensorRange}mm, 반응 ${cfg.sensorResponse}ms, 디바운스 ${cfg.sensorDebounce}ms`
       },
@@ -735,6 +806,7 @@
       good: '좋음',
       medium: '보통',
       risk: '위험',
+      danger: '위험',
       mismatch: '불일치'
     }[status] || status;
   }
@@ -774,10 +846,13 @@
       `배출구 폭 검토: ${fmt(cfg.outletWidth, 1)}mm`,
       `저장통 경사각 검토: ${fmt(cfg.hopperAngle, 0)}°`,
       `상부 차단판 적용 여부: ${cfg.topGuard ? '적용' : '미적용'}`,
-      `IR 센서 위치 결정: ${cfg.sensorPosition}mm`,
+      `토출부 포토센서/IR 위치 결정: ${cfg.sensorPosition}mm`,
       `구동부 종류 확정: ${driveModeLabel(cfg.driveMode)}`,
-      '모터 전원 분리 여부 확인',
-      '원점 보정 방식 결정',
+      'Raspberry Pi 5V/5A USB-C 전원 확인',
+      'MG996R 별도 6V 전원 또는 Buck 6V 출력 확인',
+      'Raspberry Pi GND와 서보 전원 GND 공통 연결 확인',
+      '수동 초기 정렬 표시선 또는 물리적 홈 스토퍼 검토',
+      '토출부 센서 브래킷과 좁은 낙하 통로 설계',
       '회수 트레이 설계',
       '비상 정지/알림 기능 검토',
       `3D 프린팅 공차 고려: ±${fmt(cfg.tolerance, 2)}mm`,
@@ -835,10 +910,10 @@
     rows.push(['슬롯 크기 적정성', `${fmt(p.slotClearance, 2)} mm`, f.slotTooTight > 0.35 ? '슬롯이 작아 미배출 또는 걸림 위험이 큼' : f.slotTooLoose > 0.35 ? '슬롯이 커서 중복 배출 위험 확인 필요' : '1개 정량 배출에 비교적 적합']);
     rows.push(['배출구 폭 적정성', `${fmt(p.outletClearance, 2)} mm`, f.outletTooTight > 0.3 ? '배출구 걸림 위험이 있으므로 폭 또는 모서리 보정 필요' : f.outletTooWide > 0.4 ? '배출구가 넓어 중복 배출 가능성을 함께 확인해야 함' : '배출구 여유는 기본 조건 충족']);
     rows.push(['저장통 경사각 적정성', `${fmt(cfg.hopperAngle, 1)}°`, f.lowAnglePenalty > 0.25 ? '경사각이 낮아 슬롯 충전 실패 가능성이 큼' : f.highAnglePenalty > 0.15 ? '경사각이 높아 알약 압착/쏠림을 확인해야 함' : '슬롯 충전에 무리 없는 범위']);
-    rows.push(['IR 센서 위치 적정성', `${cfg.sensorPosition} mm / 범위 ${cfg.sensorRange} mm`, p.sensorP < 0.82 ? '센서 위치, 범위, 반응 시간, 디바운스를 보정해야 함' : '배출 확인용으로 사용 가능']);
+    rows.push(['포토센서/IR 위치 적정성', `${cfg.sensorPosition} mm / 범위 ${cfg.sensorRange} mm`, p.sensorP < 0.82 ? '센서 위치, 범위, 반응 시간, 디바운스를 보정해야 함' : '배출 확인용으로 사용 가능']);
     rows.push(['구동각/슬롯각 일치', `${fmt(p.desiredAngle, 2)}° / 설정 ${fmt(cfg.motorAngle, 2)}°`, Math.abs(cfg.motorAngle - p.desiredAngle) > 2 ? '슬롯 개수 기준 목표각과 설정각 차이 큼' : '슬롯 1칸 회전 조건에 근접']);
-    rows.push(['원점 보정 센서 미사용 누적 오차', `${fmt(f.cumulativeDrift, 2)}°`, f.cumulativeDrift > 0.45 ? '반복 횟수가 많을수록 위치 누적 오차 점검 필요' : '발표용 반복 조건에서는 누적 위험이 낮은 편']);
-    rows.push(['외장 구동 드라이버 미사용 안정성', `${cfg.powerStability}%`, cfg.powerStability < 70 ? '전원 안정성이 낮아 구동 위치 오차와 미배출 위험 증가' : '현재 전원 안정성 가정은 기본 조건 충족']);
+    rows.push(['자동 원점 보정 없음 누적 오차', `${fmt(f.cumulativeDrift, 2)}°`, f.cumulativeDrift > 0.45 ? '반복 횟수가 많을수록 위치 누적 오차 점검 필요' : '1~10회 단기 데모에서는 수동 초기 정렬로 검증 가능']);
+    rows.push(['전원 구조 안정성', `${cfg.powerStability}% / ${cfg.servoPowerSource}`, cfg.powerStability < 70 || powerCheck(cfg).riskScore > 0.25 ? '전원 안정성이 낮아 구동 위치 오차와 미배출 위험 증가' : '현재 전원 구조 가정은 기본 조건 충족']);
     rows.push(['예상 제작 반복 감소', `${Math.max(1, Math.round(m.failureRate * 6))}회 수준 문제 사전 발견`, '실제 출력 전에 주요 실패 유형을 먼저 확인하는 근거로 사용']);
 
     const tbody = document.getElementById('diagnosisTable');
@@ -1198,8 +1273,9 @@
       `알약: ${shapeLabel(cfg.pillShape)} / ${cfg.pillDiameter}×${cfg.pillLength}mm`,
       `슬롯: ${cfg.slotSize}mm / ${cfg.slotCount}칸`,
       `배출구: ${cfg.outletWidth}mm`,
-      `구동부: ${driveModeLabel(cfg.driveMode)} / ${cfg.motorSpeed}rpm`,
-      `구동각: ${cfg.motorAngle}° / 유격 ${cfg.backlashDeg}°`,
+      `구동부: ${cfg.actuatorType === 'mg996r' ? 'MG996R' : '서보형'} / ${cfg.motorSpeed}rpm`,
+      `구동각: ${cfg.motorAngle}° / 토크여유 ${cfg.servoTorqueMargin}%`,
+      `전원: Pi 5V/5A · 서보 ${cfg.servoPowerSource}`,
       `센서: 범위 ${cfg.sensorRange}mm / 반응 ${cfg.sensorResponse}ms`,
       `충전확률: ${fmtPct(probs.fillP)}`,
       `중복확률: ${fmtPct(probs.doubleP)}`,
@@ -1317,7 +1393,7 @@
   }
 
   function driveModeLabel(mode) {
-    return { servo: '서보형', rotary: '회전 모듈', manual: '수동 가상' }[mode] || mode;
+    return { servo: '서보형', manual: '수동 가상' }[mode] || mode;
   }
 
   function animateOne() {
@@ -1425,7 +1501,7 @@
   function loadExample() {
     setConfig({
       projectName: '취약계층용 스마트 캡슐 알약 디스펜서',
-      requirements: 'Raspberry Pi 5, 9인치 HDMI 터치스크린, 서보형 회전 구동부, IR Break Beam 센서, 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 3D 프린팅 구조물, 알약 회수 트레이, 부저 또는 LED 알림',
+      requirements: 'Raspberry Pi 5, 9인치 HDMI 터치스크린, MG996R 서보모터, 별도 6V 서보 전원, 토출부 포토센서 또는 IR Break Beam 센서, 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 3D 프린팅 구조물, 알약 회수 트레이, 부저 또는 LED 알림, 공통 GND 연결',
       pillShape: 'capsule',
       pillCount: 24,
       pillDiameter: 8.5,
@@ -1440,12 +1516,24 @@
       outletWidth: 12,
       edgeChamfer: 1,
       topGuard: 1,
+      actuatorType: 'mg996r',
+      driveControl: 'servo_pwm',
       driveMode: 'servo',
       motorSpeed: 18,
       motorAngle: 45,
       actuatorErrorDeg: 1.2,
       backlashDeg: 0.8,
+      servoTorqueMargin: 65,
       powerStability: 85,
+      homeMode: 'manual_mark',
+      piPowerSource: 'usb_c_5v5a',
+      servoPowerSource: 'separate_6v',
+      use24vSupply: 'no',
+      buckConverter: 'yes',
+      buckVoltage: 6.0,
+      buckCurrent: 5.0,
+      commonGnd: 'yes',
+      dischargeSensor: 'yes',
       sensorPosition: 72,
       sensorRange: 8,
       sensorResponse: 20,
