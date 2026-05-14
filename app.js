@@ -138,81 +138,169 @@
     return Math.max(cfg.pillDiameter, cfg.pillLength * 0.50);
   }
 
-  function calcProbabilities(cfg, random = Math.random) {
-    const designAfter = cfg.designMode === 'after';
+  function getDesignFactors(cfg, random = Math.random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
     const control = cfg.control || parseControlCode(cfg.controlCode || '');
     const effectiveSize = effectivePillSize(cfg);
     const slotClearance = cfg.slotSize - cfg.pillDiameter;
-    const effectiveClearance = cfg.slotSize - effectiveSize * 0.72;
-    const outletClearance = cfg.outletWidth - cfg.pillDiameter;
+    const effectiveClearance = cfg.slotSize - effectiveSize;
+    const outletClearance = cfg.outletWidth - effectiveSize;
     const desiredAngle = 360 / Math.max(1, cfg.slotCount);
     const configuredAngleError = Math.abs(cfg.motorAngle - desiredAngle);
-    const rampFactor = 1 - clamp(control.motorRamp ?? 0.5, 0, 1) * 0.35;
-    const driveModeFactor = cfg.driveMode === 'servo' ? 0.85 : cfg.driveMode === 'manual' ? 1.18 : 1;
+    const ramp = clamp(control.motorRamp ?? 0.5, 0, 1);
+    const rampFactor = 1 - ramp * 0.35;
+    const driveModeFactor = cfg.driveMode === 'servo' ? 0.88 : cfg.driveMode === 'manual' ? 1.2 : 1;
     const toleranceNoise = Math.abs(normalNoise(random)) * cfg.tolerance;
-    const speedPenalty = clamp((cfg.motorSpeed - 24) / 80, 0, 0.45);
-    const speedAlignmentPenalty = clamp((cfg.motorSpeed - 26) / 70, 0, 0.55);
-    const powerWeakness = clamp((100 - cfg.powerStability) / 100, 0, 0.75);
-    const lowAnglePenalty = clamp((24 - cfg.hopperAngle) / 32, 0, 0.55);
+    const speedStress = clamp((cfg.motorSpeed - 22) / 65, 0, 0.65);
+    const lowAnglePenalty = clamp((26 - cfg.hopperAngle) / 30, 0, 0.7);
+    const highAnglePenalty = clamp((cfg.hopperAngle - 52) / 20, 0, 0.25);
     const lowStockPenalty = clamp((7 - cfg.pillCount) / 10, 0, 0.4);
-    const tooSmallPenalty = cfg.slotSize < cfg.pillDiameter ? 0.9 : clamp((0.9 - slotClearance) / 3, 0, 0.45);
-    const fitBonus = clamp((slotClearance - 0.7) / 4.5, -0.35, 0.25);
-    const shapePenalty = cfg.pillShape === 'capsule' ? 0.08 : cfg.pillShape === 'oval' ? 0.04 : 0;
-    const modeFillBoost = designAfter ? 0.09 : -0.05;
-
-    let fillP = 0.78 + fitBonus + modeFillBoost - cfg.friction * 0.32 - speedPenalty * 0.36 - lowAnglePenalty * 0.45 - lowStockPenalty - shapePenalty;
-    fillP -= clamp(toleranceNoise / 6, 0, 0.12);
-    fillP = clamp(fillP, 0.02, 0.98);
-
-    const oversizedSlot = clamp((cfg.slotSize / Math.max(cfg.pillDiameter, 1) - 1.18) / 0.9, 0, 1);
-    const oversizedOutlet = clamp((cfg.outletWidth / Math.max(cfg.pillDiameter, 1) - 1.25) / 1.0, 0, 1);
-    const guardBonus = cfg.topGuard ? 0.14 : 0;
-    let doubleP = 0.02 + oversizedSlot * 0.43 + oversizedOutlet * 0.18 - guardBonus - (designAfter ? 0.08 : 0);
-    if (cfg.targetCount > 1) doubleP += 0.03 * (cfg.targetCount - 1);
-    doubleP = clamp(doubleP, 0.005, 0.72);
-
-    const outletTooNarrow = clamp((cfg.pillDiameter + 1.2 - cfg.outletWidth) / 5, 0, 0.7);
-    const chamferBonus = Number(cfg.edgeChamfer) * 0.055;
-    let jamP = 0.05 + cfg.friction * 0.36 + outletTooNarrow * 0.48 + speedPenalty * 0.28 + lowAnglePenalty * 0.16 + shapePenalty;
-    jamP -= chamferBonus + (designAfter ? 0.055 : 0) + clamp(control.motorRamp || 0, 0, 1) * 0.055 + (control.jamRecovery ? 0.035 : 0);
-    jamP = clamp(jamP, 0.004, 0.82);
-
-    const actuatorRandomError = cfg.actuatorErrorDeg * driveModeFactor * rampFactor + toleranceNoise * 0.7;
-    const backlashError = Math.max(0, cfg.backlashDeg) * (0.55 + speedAlignmentPenalty * 0.45);
-    const speedAlignmentError = speedAlignmentPenalty * 2.4;
-    const powerAlignmentError = powerWeakness * 3.2;
-    const totalIndexingAngleError = configuredAngleError + actuatorRandomError + backlashError + speedAlignmentError + powerAlignmentError;
-    const motorFailP = clamp((totalIndexingAngleError - 2.2) / 9, 0, 0.75) + powerWeakness * 0.12;
-
+    const shapeSensitivity = cfg.pillShape === 'capsule' ? 1.25 : cfg.pillShape === 'oval' ? 1.12 : 1;
+    const shapePenalty = cfg.pillShape === 'capsule' ? 0.08 : cfg.pillShape === 'oval' ? 0.045 : 0;
+    const powerWeakness = clamp((100 - cfg.powerStability) / 100, 0, 0.85);
+    const trialProgress = clamp((trialIndex - 1) / Math.max(1, totalTrials - 1), 0, 1);
+    const cumulativeDrift = trialProgress * clamp(totalTrials / 1000, 0, 1.4) * (0.32 + cfg.backlashDeg * 0.055 + powerWeakness * 0.55);
+    const idealSlotClearance = cfg.pillShape === 'capsule' ? cfg.pillDiameter * 0.28 : cfg.pillDiameter * 0.2;
+    const idealOutletClearance = effectiveSize * 0.2;
+    const slotTooTight = clamp((idealSlotClearance - slotClearance) / Math.max(1.2, idealSlotClearance), 0, 1);
+    const slotTooLoose = clamp((slotClearance - idealSlotClearance * 1.9) / Math.max(2, cfg.pillDiameter * 0.45), 0, 1);
+    const outletTooTight = clamp((idealOutletClearance - outletClearance) / Math.max(1.2, idealOutletClearance), 0, 1);
+    const outletTooWide = clamp((outletClearance - idealOutletClearance * 2.2) / Math.max(2, cfg.pillDiameter * 0.45), 0, 1);
+    const tolerancePenalty = clamp(cfg.tolerance / 1.4, 0, 0.75);
+    const toleranceNoisePenalty = clamp(toleranceNoise / 5, 0, 0.16);
+    const guardMissing = cfg.topGuard ? 0 : 1;
+    const edgeLevel = clamp(Number(cfg.edgeChamfer) || 0, 0, 2);
     const dropSpeed = Math.max(0.1, cfg.motorSpeed / 18);
     const passTimeMs = clamp((cfg.sensorRange + cfg.pillDiameter) * 7 / dropSpeed, 8, 280);
-    const responsePenalty = clamp((cfg.sensorResponse - passTimeMs) / 140, 0, 0.55);
-    const debouncePenalty = cfg.sensorDebounce > 180 ? clamp((cfg.sensorDebounce - 180) / 300, 0, 0.25) : 0;
-    const rangePenalty = clamp((cfg.pillDiameter * 0.45 - cfg.sensorRange) / 10, 0, 0.35);
-    const positionPenalty = clamp(Math.abs(cfg.sensorPosition - 72) / 120, 0, 0.32);
-    let sensorP = 0.96 - responsePenalty - rangePenalty - positionPenalty - debouncePenalty - (designAfter ? 0 : 0.045);
-    if (control.sensorCheck === false) sensorP -= 0.2;
-    sensorP = clamp(sensorP, 0.15, 0.995);
+    const responsePenalty = clamp((cfg.sensorResponse - passTimeMs) / 140, 0, 0.6);
+    const debounceNoisePenalty = cfg.sensorDebounce < 25 ? clamp((25 - cfg.sensorDebounce) / 80, 0, 0.18) : 0;
+    const debounceMergePenalty = cfg.sensorDebounce > 150 ? clamp((cfg.sensorDebounce - 150) / 300, 0, 0.32) : 0;
+    const rangePenalty = clamp((cfg.pillDiameter * 0.55 - cfg.sensorRange) / 10, 0, 0.38);
+    const positionPenalty = clamp(Math.abs(cfg.sensorPosition - 72) / 115, 0, 0.36);
 
     const cycleTimeSec = clamp((60 / Math.max(1, cfg.motorSpeed)) * (desiredAngle / 360) * 1.2 + 0.45 + cfg.targetCount * 0.18, 0.45, 8.0);
 
     return {
-      fillP,
-      doubleP,
-      jamP,
-      motorFailP: clamp(motorFailP, 0, 0.85),
-      sensorP,
-      indexingAngleError: totalIndexingAngleError,
-      desiredAngle,
+      control,
+      effectiveSize,
       slotClearance,
       effectiveClearance,
       outletClearance,
+      desiredAngle,
+      configuredAngleError,
+      ramp,
+      rampFactor,
+      driveModeFactor,
+      toleranceNoise,
+      tolerancePenalty,
+      toleranceNoisePenalty,
+      speedStress,
+      lowAnglePenalty,
+      highAnglePenalty,
+      lowStockPenalty,
+      shapeSensitivity,
+      shapePenalty,
+      powerWeakness,
+      cumulativeDrift,
+      idealSlotClearance,
+      idealOutletClearance,
+      slotTooTight,
+      slotTooLoose,
+      outletTooTight,
+      outletTooWide,
+      guardMissing,
+      edgeLevel,
+      dropSpeed,
+      passTimeMs,
+      responsePenalty,
+      debounceNoisePenalty,
+      debounceMergePenalty,
+      rangePenalty,
+      positionPenalty,
       cycleTimeSec
     };
   }
 
-  function simulateSingle(cfg, random, trialIndex = 1) {
-    const probs = calcProbabilities(cfg, random);
+  function calcFillProbability(cfg, f) {
+    // 미배출은 슬롯 여유, 저장통 경사각, 마찰, 재고, 공차, 알약 형태와 전원 약화가 나쁘면 증가한다.
+    const fitBonus = clamp((f.slotClearance - f.idealSlotClearance * 0.55) / Math.max(2, cfg.pillDiameter * 0.55), -0.34, 0.2);
+    let fillP = 0.84 + fitBonus;
+    fillP -= f.slotTooTight * 0.5 * f.shapeSensitivity;
+    fillP -= f.lowAnglePenalty * 0.34 + f.highAnglePenalty * 0.08;
+    fillP -= cfg.friction * 0.24 + f.lowStockPenalty * 0.35 + f.tolerancePenalty * 0.09 + f.toleranceNoisePenalty;
+    fillP -= f.shapePenalty + f.powerWeakness * 0.12;
+    fillP += cfg.topGuard ? 0.025 : -0.02;
+    return clamp(fillP, 0.03, 0.98);
+  }
+
+  function calcDoubleProbability(cfg, f) {
+    // 중복 배출은 슬롯/배출구가 과하게 크거나 차단판이 없고 속도가 빠르면 증가한다.
+    let doubleP = 0.012;
+    doubleP += f.slotTooLoose * 0.38;
+    doubleP += f.outletTooWide * 0.18;
+    doubleP += f.guardMissing * 0.14;
+    doubleP += f.speedStress * 0.08;
+    doubleP += cfg.targetCount > 1 ? 0.03 * (cfg.targetCount - 1) : 0;
+    doubleP -= cfg.topGuard ? 0.08 : 0;
+    doubleP -= f.edgeLevel * 0.01;
+    return clamp(doubleP, 0.003, 0.7);
+  }
+
+  function calcJamProbability(cfg, f) {
+    // 걸림은 배출구가 유효 알약 크기에 근접하거나 좁고, 마찰과 공차가 함께 높고, 속도가 빠르면 증가한다.
+    const frictionToleranceCoupling = cfg.friction * f.tolerancePenalty * 0.22;
+    let jamP = 0.035;
+    jamP += f.outletTooTight * 0.52 * f.shapeSensitivity;
+    jamP += f.slotTooTight * 0.18;
+    jamP += cfg.friction * 0.26 + f.tolerancePenalty * 0.13 + frictionToleranceCoupling;
+    jamP += f.speedStress * 0.22 + f.shapePenalty + f.lowAnglePenalty * 0.08;
+    jamP -= f.edgeLevel * 0.065;
+    jamP -= f.ramp * 0.045;
+    jamP -= f.control.jamRecovery ? 0.035 : 0;
+    return clamp(jamP, 0.004, 0.82);
+  }
+
+  function calcSensorProbability(cfg, f) {
+    // 센서 실패는 감지 범위, 위치, 반응시간, 디바운스, 낙하 속도 조건이 나쁠수록 증가한다.
+    let sensorP = 0.965;
+    sensorP -= f.responsePenalty + f.rangePenalty + f.positionPenalty;
+    sensorP -= f.debounceNoisePenalty + f.debounceMergePenalty;
+    sensorP -= f.speedStress * 0.04;
+    if (f.control.sensorCheck === false) sensorP -= 0.2;
+    return clamp(sensorP, 0.12, 0.995);
+  }
+
+  function calcIndexingProbability(cfg, f) {
+    // 구동 위치 오차는 슬롯각 불일치, 구동각 오차, 백래시, 속도, 전원 약화, 원점 보정 부재에 따른 누적 드리프트로 증가한다.
+    const actuatorRandomError = cfg.actuatorErrorDeg * f.driveModeFactor * f.rampFactor + f.toleranceNoise * 0.55;
+    const backlashError = Math.max(0, cfg.backlashDeg) * (0.6 + f.speedStress * 0.5);
+    const speedAlignmentError = f.speedStress * 2.2 * (1 - f.ramp * 0.32);
+    const powerAlignmentError = f.powerWeakness * 3.4;
+    const indexingAngleError = f.configuredAngleError + actuatorRandomError + backlashError + speedAlignmentError + powerAlignmentError + f.cumulativeDrift;
+    const motorFailP = clamp((indexingAngleError - 2.4) / 9.5, 0, 0.74) + f.powerWeakness * 0.1;
+    return { indexingAngleError, motorFailP: clamp(motorFailP, 0, 0.86) };
+  }
+
+  function calcProbabilities(cfg, random = Math.random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
+    const f = getDesignFactors(cfg, random, trialIndex, totalTrials);
+    const indexing = calcIndexingProbability(cfg, f);
+    return {
+      fillP: calcFillProbability(cfg, f),
+      doubleP: calcDoubleProbability(cfg, f),
+      jamP: calcJamProbability(cfg, f),
+      sensorP: calcSensorProbability(cfg, f),
+      motorFailP: indexing.motorFailP,
+      indexingAngleError: indexing.indexingAngleError,
+      desiredAngle: f.desiredAngle,
+      slotClearance: f.slotClearance,
+      effectiveClearance: f.effectiveClearance,
+      outletClearance: f.outletClearance,
+      cycleTimeSec: f.cycleTimeSec,
+      factors: f
+    };
+  }
+
+  function simulateSingle(cfg, random, trialIndex = 1, totalTrials = cfg.trialCount || 200) {
+    const probs = calcProbabilities(cfg, random, trialIndex, totalTrials);
     const control = cfg.control || parseControlCode(cfg.controlCode || '');
     let attempts = 0;
     let filled = false;
@@ -260,7 +348,8 @@
           reason = '실제 배출은 되었지만 센서 감지 실패';
         } else {
           if (doubleDrop) {
-            sensorCount = control.doubleDetect ? 2 : 1;
+            const separateDropP = clamp(0.72 + cfg.sensorRange / 80 - probs.factors.debounceMergePenalty * 0.8 - probs.factors.speedStress * 0.18, 0.25, 0.96);
+            sensorCount = control.doubleDetect && random() < separateDropP ? 2 : 1;
             status = 'double_drop';
             reason = control.doubleDetect ? '중복 배출 감지됨' : '중복 배출을 1회로 오인식할 위험';
           } else {
@@ -346,8 +435,42 @@
       avgDuration: total ? sumDuration / total : 0,
       avgIndexingAngleError: total ? sumIndexingAngle / total : 0,
       sensorSuccessRate: sensorDetectable ? sensorDetected / sensorDetectable : 0,
+      topCauses: getTopFailureCauses(cfg, counts, total),
       cfg
     };
+  }
+
+  function getTopFailureCauses(cfg, counts, total) {
+    const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 909), Math.max(1, Math.round((cfg.trialCount || 200) * 0.7)), cfg.trialCount || 200);
+    const f = p.factors;
+    const candidates = [
+      {
+        label: '슬롯 충전 조건',
+        score: (counts.no_drop / Math.max(1, total)) + f.slotTooTight * 0.28 + f.lowAnglePenalty * 0.18 + f.lowStockPenalty * 0.12 + cfg.friction * 0.08,
+        detail: `슬롯 여유 ${fmt(p.slotClearance, 2)}mm, 경사각 ${cfg.hopperAngle}°, 마찰 ${fmt(cfg.friction, 2)}`
+      },
+      {
+        label: '중복 배출 조건',
+        score: (counts.double_drop / Math.max(1, total)) + f.slotTooLoose * 0.24 + f.outletTooWide * 0.12 + f.guardMissing * 0.1,
+        detail: `슬롯 과여유 ${fmt(f.slotTooLoose * 100, 0)}%, 배출구 과여유 ${fmt(f.outletTooWide * 100, 0)}%, 차단판 ${cfg.topGuard ? '있음' : '없음'}`
+      },
+      {
+        label: '배출구 걸림 조건',
+        score: (counts.jam / Math.max(1, total)) + f.outletTooTight * 0.3 + cfg.friction * 0.1 + f.tolerancePenalty * 0.08 + f.speedStress * 0.08,
+        detail: `배출구 여유 ${fmt(p.outletClearance, 2)}mm, 모서리 보정 ${cfg.edgeChamfer}, 속도 ${cfg.motorSpeed}rpm`
+      },
+      {
+        label: 'IR 센서 감지 조건',
+        score: (counts.sensor_fail / Math.max(1, total)) + f.rangePenalty * 0.18 + f.positionPenalty * 0.16 + f.responsePenalty * 0.16 + f.debounceMergePenalty * 0.12,
+        detail: `센서 위치 ${cfg.sensorPosition}mm, 범위 ${cfg.sensorRange}mm, 반응 ${cfg.sensorResponse}ms, 디바운스 ${cfg.sensorDebounce}ms`
+      },
+      {
+        label: '구동 위치 안정성',
+        score: (counts.motor_error / Math.max(1, total)) + clamp(p.indexingAngleError / 12, 0, 0.5) + f.powerWeakness * 0.14 + f.cumulativeDrift * 0.06,
+        detail: `구동각 오차 ${fmt(p.indexingAngleError, 2)}°, 전원 안정성 ${cfg.powerStability}%, 반복 누적 ${fmt(f.cumulativeDrift, 2)}°`
+      }
+    ];
+    return candidates.sort((a, b) => b.score - a.score).slice(0, 3);
   }
 
   function runBatch(configOverride = null, seedOffset = 0) {
@@ -358,7 +481,7 @@
     const random = mulberry32((Math.round(cfg.seed || 1) + seedOffset) >>> 0);
     const results = [];
     for (let i = 0; i < trialCount; i += 1) {
-      results.push(simulateSingle(cfg, random, i + 1));
+      results.push(simulateSingle(cfg, random, i + 1, trialCount));
     }
     const metrics = aggregateResults(results, cfg);
     return { cfg, results, metrics };
@@ -384,6 +507,7 @@
       motorFailP: r.probs.motorFailP.toFixed(4)
     }));
     updateMetrics(batch.metrics);
+    updateTopCauses(batch.metrics);
     updateDiagnosis(batch.metrics);
     drawFailureChart(batch.metrics);
     state.lastResult = batch.results[batch.results.length - 1];
@@ -393,28 +517,40 @@
 
   function runCompare() {
     const base = getConfig();
+    const effectiveSize = effectivePillSize(base);
+    const idealSlotSize = clamp(base.pillDiameter + base.pillDiameter * 0.28, base.pillDiameter + 1.2, base.pillDiameter + 4.5);
+    const idealOutletWidth = clamp(effectiveSize + effectiveSize * 0.2, effectiveSize + 1.4, effectiveSize + 5.5);
+    const idealSensorRange = clamp(base.pillDiameter * 0.8, 6, 16);
+    const idealAngle = 360 / Math.max(1, base.slotCount);
     const beforeConfig = {
       ...base,
       designMode: 'before',
-      slotSize: Math.max(3, base.slotSize - 1.2),
-      outletWidth: Math.max(3, base.outletWidth - 0.8),
-      motorSpeed: base.motorSpeed + 8,
+      slotSize: Math.max(3, Math.min(base.slotSize, idealSlotSize) - 1.0),
+      outletWidth: Math.max(3, Math.min(base.outletWidth, idealOutletWidth) - 0.8),
+      motorAngle: base.motorAngle,
+      motorSpeed: Math.min(120, base.motorSpeed + 10),
       actuatorErrorDeg: base.actuatorErrorDeg + 0.6,
       backlashDeg: base.backlashDeg + 0.5,
       powerStability: Math.max(35, base.powerStability - 15),
       sensorPosition: base.sensorPosition + 18,
+      sensorRange: Math.max(1, Math.min(base.sensorRange, idealSensorRange) - 2),
       edgeChamfer: 0,
       topGuard: 0
     };
     const afterConfig = {
       ...base,
       designMode: 'after',
-      slotSize: base.slotSize,
-      outletWidth: base.outletWidth,
-      motorSpeed: Math.max(6, base.motorSpeed),
+      slotSize: idealSlotSize,
+      outletWidth: idealOutletWidth,
+      motorAngle: idealAngle,
+      motorSpeed: clamp(base.motorSpeed, 8, 22),
       actuatorErrorDeg: Math.max(0.2, base.actuatorErrorDeg),
       backlashDeg: Math.max(0, base.backlashDeg),
       powerStability: Math.max(75, base.powerStability),
+      sensorPosition: 72,
+      sensorRange: idealSensorRange,
+      sensorResponse: Math.min(base.sensorResponse, 24),
+      sensorDebounce: clamp(base.sensorDebounce, 40, 120),
       edgeChamfer: Math.max(1, base.edgeChamfer),
       topGuard: 1
     };
@@ -429,7 +565,7 @@
   function updateMetrics(m) {
     document.getElementById('mTotal').textContent = String(m.total);
     document.getElementById('mSuccess').textContent = fmtPct(m.successRate);
-    document.getElementById('mNoDrop').textContent = fmtPct(m.noDropRate + m.motorErrorRate);
+    document.getElementById('mNoDrop').textContent = fmtPct(m.noDropRate);
     document.getElementById('mDouble').textContent = fmtPct(m.doubleRate);
     document.getElementById('mJam').textContent = fmtPct(m.jamRate);
     document.getElementById('mSensorFail').textContent = fmtPct(m.sensorFailRate);
@@ -438,6 +574,16 @@
     const badge = document.getElementById('summaryBadge');
     badge.textContent = m.successRate >= 0.9 ? '양호' : m.successRate >= 0.75 ? '보완 필요' : '위험';
     badge.className = m.successRate >= 0.9 ? 'badge success' : 'badge';
+  }
+
+  function updateTopCauses(m) {
+    const list = document.getElementById('topCauseList');
+    list.innerHTML = '';
+    for (const cause of m.topCauses || []) {
+      const li = document.createElement('li');
+      li.textContent = `${cause.label}: ${cause.detail}`;
+      list.appendChild(li);
+    }
   }
 
   function updateLastResult(r) {
@@ -459,10 +605,14 @@
     const cfg = m.cfg;
     const rows = [];
     const p = calcProbabilities(cfg, mulberry32(cfg.seed + 777));
-    rows.push(['슬롯-알약 여유', `${fmt(p.slotClearance, 2)} mm`, p.slotClearance < 0.8 ? '슬롯이 작아 미배출 또는 걸림 위험이 큼' : p.slotClearance > cfg.pillDiameter * 0.45 ? '슬롯이 커서 중복 배출 위험 확인 필요' : '1개 정량 배출에 비교적 적합']);
-    rows.push(['배출구 여유', `${fmt(p.outletClearance, 2)} mm`, p.outletClearance < 1 ? '배출구 걸림 위험이 있으므로 chamfer/폭 조정 필요' : '배출구 여유는 기본 조건 충족']);
-    rows.push(['목표 회전각', `${fmt(p.desiredAngle, 2)}° / 설정 ${fmt(cfg.motorAngle, 2)}°`, Math.abs(cfg.motorAngle - p.desiredAngle) > 2 ? '슬롯 개수 기준 목표각과 설정각 차이 큼' : '슬롯 1칸 회전 조건에 근접']);
-    rows.push(['센서 감지 확률', fmtPct(p.sensorP), p.sensorP < 0.8 ? '센서 위치, 범위, 반응 시간을 보정해야 함' : '배출 확인용으로 사용 가능']);
+    const f = p.factors;
+    rows.push(['슬롯 크기 적정성', `${fmt(p.slotClearance, 2)} mm`, f.slotTooTight > 0.35 ? '슬롯이 작아 미배출 또는 걸림 위험이 큼' : f.slotTooLoose > 0.35 ? '슬롯이 커서 중복 배출 위험 확인 필요' : '1개 정량 배출에 비교적 적합']);
+    rows.push(['배출구 폭 적정성', `${fmt(p.outletClearance, 2)} mm`, f.outletTooTight > 0.3 ? '배출구 걸림 위험이 있으므로 폭 또는 모서리 보정 필요' : f.outletTooWide > 0.4 ? '배출구가 넓어 중복 배출 가능성을 함께 확인해야 함' : '배출구 여유는 기본 조건 충족']);
+    rows.push(['저장통 경사각 적정성', `${fmt(cfg.hopperAngle, 1)}°`, f.lowAnglePenalty > 0.25 ? '경사각이 낮아 슬롯 충전 실패 가능성이 큼' : f.highAnglePenalty > 0.15 ? '경사각이 높아 알약 압착/쏠림을 확인해야 함' : '슬롯 충전에 무리 없는 범위']);
+    rows.push(['IR 센서 위치 적정성', `${cfg.sensorPosition} mm / 범위 ${cfg.sensorRange} mm`, p.sensorP < 0.82 ? '센서 위치, 범위, 반응 시간, 디바운스를 보정해야 함' : '배출 확인용으로 사용 가능']);
+    rows.push(['구동각/슬롯각 일치', `${fmt(p.desiredAngle, 2)}° / 설정 ${fmt(cfg.motorAngle, 2)}°`, Math.abs(cfg.motorAngle - p.desiredAngle) > 2 ? '슬롯 개수 기준 목표각과 설정각 차이 큼' : '슬롯 1칸 회전 조건에 근접']);
+    rows.push(['원점 보정 센서 미사용 누적 오차', `${fmt(f.cumulativeDrift, 2)}°`, f.cumulativeDrift > 0.45 ? '반복 횟수가 많을수록 위치 누적 오차 점검 필요' : '발표용 반복 조건에서는 누적 위험이 낮은 편']);
+    rows.push(['외장 구동 드라이버 미사용 안정성', `${cfg.powerStability}%`, cfg.powerStability < 70 ? '전원 안정성이 낮아 구동 위치 오차와 미배출 위험 증가' : '현재 전원 안정성 가정은 기본 조건 충족']);
     rows.push(['예상 제작 반복 감소', `${Math.max(1, Math.round(m.failureRate * 6))}회 수준 문제 사전 발견`, '실제 출력 전에 주요 실패 유형을 먼저 확인하는 근거로 사용']);
 
     const tbody = document.getElementById('diagnosisTable');
@@ -480,10 +630,11 @@
 
   function drawFailureChart(m) {
     const data = [
-      ['미배출', m.counts.no_drop + m.counts.motor_error],
+      ['미배출', m.counts.no_drop],
       ['중복', m.counts.double_drop],
       ['걸림', m.counts.jam],
       ['센서 실패', m.counts.sensor_fail],
+      ['구동 오차', m.counts.motor_error],
       ['정상', m.counts.success]
     ];
     drawBarChart(failureCtx, failureChart.width, failureChart.height, data, '회');
@@ -491,14 +642,31 @@
 
   function drawCompareChart(compare = state.compare) {
     if (!compare) {
-      drawBarChart(compareCtx, compareChart.width, compareChart.height, [['개선 전', 0], ['개선 후', 0]], '%', 100);
+      drawGroupedBarChart(compareCtx, compareChart.width, compareChart.height, defaultCompareData(null), '%', 100);
       return;
     }
-    const data = [
-      ['개선 전', compare.before.successRate * 100],
-      ['개선 후', compare.after.successRate * 100]
+    drawGroupedBarChart(compareCtx, compareChart.width, compareChart.height, defaultCompareData(compare), '%', 100);
+  }
+
+  function defaultCompareData(compare) {
+    if (!compare) {
+      return [
+        { label: '정상', before: 0, after: 0 },
+        { label: '미배출', before: 0, after: 0 },
+        { label: '중복', before: 0, after: 0 },
+        { label: '걸림', before: 0, after: 0 },
+        { label: '센서', before: 0, after: 0 },
+        { label: '구동', before: 0, after: 0 }
+      ];
+    }
+    return [
+      { label: '정상', before: compare.before.successRate * 100, after: compare.after.successRate * 100 },
+      { label: '미배출', before: compare.before.noDropRate * 100, after: compare.after.noDropRate * 100 },
+      { label: '중복', before: compare.before.doubleRate * 100, after: compare.after.doubleRate * 100 },
+      { label: '걸림', before: compare.before.jamRate * 100, after: compare.after.jamRate * 100 },
+      { label: '센서', before: compare.before.sensorFailRate * 100, after: compare.after.sensorFailRate * 100 },
+      { label: '구동', before: compare.before.motorErrorRate * 100, after: compare.after.motorErrorRate * 100 }
     ];
-    drawBarChart(compareCtx, compareChart.width, compareChart.height, data, '%', 100);
   }
 
   function drawBarChart(c, w, h, data, suffix = '', forcedMax = null) {
@@ -555,6 +723,76 @@
       c.textBaseline = 'top';
       c.fillText(d[0], x + barW / 2, margin.top + plotH + 10);
     });
+  }
+
+  function drawGroupedBarChart(c, w, h, data, suffix = '', forcedMax = null) {
+    c.clearRect(0, 0, w, h);
+    c.fillStyle = '#ffffff';
+    c.fillRect(0, 0, w, h);
+    const margin = { left: 48, right: 90, top: 18, bottom: 58 };
+    const plotW = w - margin.left - margin.right;
+    const plotH = h - margin.top - margin.bottom;
+    const maxValue = forcedMax || Math.max(1, ...data.flatMap(d => [d.before, d.after])) * 1.18;
+
+    c.strokeStyle = '#d9e0ee';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(margin.left, margin.top);
+    c.lineTo(margin.left, margin.top + plotH);
+    c.lineTo(margin.left + plotW, margin.top + plotH);
+    c.stroke();
+
+    c.fillStyle = '#667085';
+    c.font = '12px system-ui, sans-serif';
+    c.textAlign = 'right';
+    c.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i += 1) {
+      const value = maxValue * i / 4;
+      const y = margin.top + plotH - (value / maxValue) * plotH;
+      c.strokeStyle = '#edf1f7';
+      c.beginPath();
+      c.moveTo(margin.left, y);
+      c.lineTo(margin.left + plotW, y);
+      c.stroke();
+      c.fillText(String(Math.round(value)), margin.left - 8, y);
+    }
+
+    const groupGap = 13;
+    const groupW = Math.max(44, (plotW - groupGap * (data.length + 1)) / data.length);
+    const barW = Math.max(12, (groupW - 6) / 2);
+    data.forEach((d, i) => {
+      const x = margin.left + groupGap + i * (groupW + groupGap);
+      const beforeH = (d.before / maxValue) * plotH;
+      const afterH = (d.after / maxValue) * plotH;
+      const beforeY = margin.top + plotH - beforeH;
+      const afterY = margin.top + plotH - afterH;
+      c.fillStyle = '#94a3b8';
+      c.fillRect(x, beforeY, barW, beforeH);
+      c.fillStyle = '#2563eb';
+      c.fillRect(x + barW + 6, afterY, barW, afterH);
+      c.fillStyle = '#1d2433';
+      c.font = '700 10px system-ui, sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'bottom';
+      c.fillText(`${Math.round(d.before)}${suffix}`, x + barW / 2, beforeY - 4);
+      c.fillText(`${Math.round(d.after)}${suffix}`, x + barW + 6 + barW / 2, afterY - 4);
+      c.fillStyle = '#667085';
+      c.font = '12px system-ui, sans-serif';
+      c.textBaseline = 'top';
+      c.fillText(d.label, x + groupW / 2, margin.top + plotH + 10);
+    });
+
+    c.textAlign = 'left';
+    c.textBaseline = 'middle';
+    c.fillStyle = '#94a3b8';
+    c.fillRect(w - 78, 26, 12, 12);
+    c.fillStyle = '#334155';
+    c.font = '12px system-ui, sans-serif';
+    c.fillText('개선 전', w - 60, 32);
+    c.fillStyle = '#2563eb';
+    c.fillRect(w - 78, 48, 12, 12);
+    c.fillStyle = '#334155';
+    c.fillText('개선 후', w - 60, 54);
   }
 
   function drawStatic(result = state.lastResult) {

@@ -248,14 +248,21 @@ jamRecovery=false</textarea>
         <div class="metric"><span>평균 구동각 오차</span><strong id="mMotorErr">0.00°</strong></div>
       </div>
 
+      <div class="cause-panel">
+        <h3>실패 원인 Top 3</h3>
+        <ol id="topCauseList">
+          <li>반복 시뮬레이션을 실행하면 주요 원인이 표시됩니다.</li>
+        </ol>
+      </div>
+
       <div class="charts">
         <div class="chart-card">
           <h3>실패 유형별 횟수</h3>
           <canvas id="failureChart" width="520" height="260"></canvas>
         </div>
         <div class="chart-card">
-          <h3>개선 전/후 정확 배출률</h3>
-          <canvas id="compareChart" width="520" height="260"></canvas>
+          <h3>개선 전/후 성공·실패율 비교</h3>
+          <canvas id="compareChart" width="620" height="320"></canvas>
         </div>
       </div>
 
