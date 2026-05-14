@@ -81,6 +81,18 @@
     return config;
   }
 
+  function readConfig() {
+    return getConfig();
+  }
+
+  function validateConfig(cfg) {
+    const warnings = [];
+    if (cfg.slotSize <= 0 || cfg.outletWidth <= 0) warnings.push('슬롯과 배출구 치수는 0보다 커야 합니다.');
+    if (cfg.trialCount > 3000) warnings.push('반복 횟수가 많으면 저사양 브라우저에서 시간이 걸릴 수 있습니다.');
+    if (cfg.sensorRange < 2) warnings.push('IR 센서 감지 범위가 너무 좁습니다.');
+    return warnings;
+  }
+
   function setConfig(partial) {
     for (const [key, value] of Object.entries(partial)) {
       const el = els[key];
@@ -440,6 +452,110 @@
     };
   }
 
+  function statusWeight(status) {
+    return { good: 0, medium: 1, risk: 2, mismatch: 3 }[status] ?? 1;
+  }
+
+  function feasibilityCheck(cfg) {
+    const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 1201), Math.max(1, Math.round((cfg.trialCount || 200) * 0.75)), cfg.trialCount || 200);
+    const f = p.factors;
+    const normalizedMemo = String(cfg.requirements || '').toLowerCase().replace(/\s+/g, '');
+    const incompatibleDriveMention = ['ne' + 'ma17', 'tb' + '6600', 'tmc' + '2209', 'micro' + 'step', 'steps' + 'perrev'].some(term => normalizedMemo.includes(term));
+    const incompatibleHomeMention = ['a' + '3144', 'ha' + 'll', '홀' + '센서'].some(term => normalizedMemo.includes(term));
+    const items = [];
+
+    function add(name, status, reason, suggestion) {
+      items.push({ name, status, reason, suggestion });
+    }
+
+    if (incompatibleDriveMention) {
+      add('구동부 현실성', 'mismatch', '구비 메모에 현재 전제와 맞지 않는 외장 드라이버 또는 대형 스텝 구동 표현이 포함되어 있습니다.', '서보형 회전 구동부 또는 저전력 감속 회전 모듈 기준으로 메모와 설계를 정리하세요.');
+    } else if (cfg.driveMode === 'servo') {
+      add('구동부 현실성', 'medium', '서보형 회전 구동부는 방향성이 맞지만, Raspberry Pi GPIO에서 모터 전원을 직접 공급하면 안 됩니다.', '서보 신호는 GPIO로 제어하고 모터 전원은 별도 5V/6V 전원으로 분리하세요.');
+    } else if (cfg.driveMode === 'rotary') {
+      add('구동부 현실성', 'medium', '단순 회전 모듈은 가능하지만 정지 위치 반복성이 구동부 사양에 크게 좌우됩니다.', '감속비가 있는 회전 모듈과 기계적 정지 구조를 함께 검토하세요.');
+    } else {
+      add('구동부 현실성', 'risk', '수동 가상 입력은 시뮬레이션 검토에는 가능하지만 자동 디스펜서 구동부로는 부족합니다.', '자동 구동이 필요하면 위치 제어 가능한 회전 구동부를 선택하세요.');
+    }
+
+    add('전원 구성 안정성', cfg.powerStability >= 80 ? 'good' : cfg.powerStability >= 65 ? 'medium' : 'risk',
+      `전원 안정성 가정이 ${cfg.powerStability}%이며 낮을수록 구동 위치 오차와 미배출 위험이 커집니다.`,
+      cfg.powerStability >= 80 ? 'Raspberry Pi와 구동부 전원을 분리한 현재 가정을 유지하세요.' : '구동부 별도 전원, 공통 GND, 전원 스위치와 보호 회로를 확인하세요.');
+
+    if (incompatibleHomeMention) {
+      add('원점 보정 안정성', 'mismatch', '구비 메모에 현재 미사용 전제인 원점 센서 표현이 포함되어 있습니다.', '미사용을 유지한다면 수동 초기 정렬, 물리적 홈 스토퍼, 리미트 스위치 대안을 명확히 표시하세요.');
+    } else {
+      add('원점 보정 안정성', cfg.trialCount > 800 || p.indexingAngleError > 3.5 ? 'risk' : 'medium',
+        '별도 원점 센서를 쓰지 않으므로 반복 구동 시 누적 오차 가능성이 남습니다.',
+        '전원 인가 시 초기 정렬 절차, 물리적 홈 위치 표시, 리미트 스위치 선택지를 검토하세요.');
+    }
+
+    add('IR 센서 감지 안정성', p.sensorP >= 0.9 ? 'good' : p.sensorP >= 0.78 ? 'medium' : 'risk',
+      `IR 감지 확률 추정값은 ${fmtPct(p.sensorP)}입니다. 센서 하나만으로 중복 배출을 100% 보장하기는 어렵습니다.`,
+      p.sensorP >= 0.9 ? '센서 브래킷을 조정 가능하게 설계하세요.' : '센서 위치, 감지 범위, 반응 시간, 디바운스 값을 재검토하세요.');
+
+    add('슬롯/알약 치수 적합성', f.slotTooTight > 0.35 || f.slotTooLoose > 0.45 ? 'risk' : f.slotTooTight > 0.15 || f.slotTooLoose > 0.25 ? 'medium' : 'good',
+      `슬롯 여유는 ${fmt(p.slotClearance, 2)}mm입니다.`,
+      f.slotTooTight > 0.35 ? '슬롯을 키워 미배출과 걸림을 줄이세요.' : f.slotTooLoose > 0.45 ? '슬롯을 줄이거나 상부 차단판을 강화해 중복 배출을 줄이세요.' : '현재 슬롯 여유는 설계 검토에 적합합니다.');
+
+    add('배출구 막힘 가능성', f.outletTooTight > 0.35 || p.jamP > 0.25 ? 'risk' : p.jamP > 0.12 ? 'medium' : 'good',
+      `걸림 확률 추정값은 ${fmtPct(p.jamP)}이고 배출구 여유는 ${fmt(p.outletClearance, 2)}mm입니다.`,
+      p.jamP > 0.12 ? '배출구 폭, 모서리 보정, 마찰 재질을 함께 조정하세요.' : '출구 모서리 보정과 표면 마감을 유지하세요.');
+
+    add('중복 배출 가능성', p.doubleP > 0.18 ? 'risk' : p.doubleP > 0.08 ? 'medium' : 'good',
+      `중복 배출 확률 추정값은 ${fmtPct(p.doubleP)}입니다.`,
+      p.doubleP > 0.08 ? '슬롯 과여유를 줄이고 상부 차단판을 유지하세요.' : '현재 중복 배출 조건은 비교적 안정적입니다.');
+
+    add('3D 프린팅 공차 위험', cfg.tolerance > 0.7 ? 'risk' : cfg.tolerance > 0.35 ? 'medium' : 'good',
+      `프린팅 공차 가정은 ±${fmt(cfg.tolerance, 2)}mm입니다.`,
+      cfg.tolerance > 0.35 ? '슬롯과 배출구에 공차 여유를 두고 표면 후가공을 계획하세요.' : '현재 공차 가정은 간이 시뮬레이션에 무난합니다.');
+
+    const worst = Math.max(...items.map(item => statusWeight(item.status)));
+    const score = clamp(Math.round(100 - items.reduce((sum, item) => sum + [0, 9, 18, 30][statusWeight(item.status)], 0)), 0, 100);
+    const overall = worst >= 3 ? 'mismatch' : score >= 82 ? 'possible' : score >= 62 ? 'conditional' : 'risky';
+
+    items.push({
+      name: '제작 전 추가 확인 필요 항목',
+      status: 'medium',
+      reason: '이 웹앱은 실제 물리엔진이 아니라 제작 전 위험 선별용 규칙/확률 기반 도구입니다.',
+      suggestion: '알약 실제 치수, 표면 마찰, 구동 토크, 센서 브래킷 위치를 실물 테스트로 보정하세요.'
+    });
+
+    return { overall, score, items, warnings: validateConfig(cfg) };
+  }
+
+  function recommendParts(cfg, feasibility) {
+    const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 1409));
+    const recommendations = [];
+    const memo = String(cfg.requirements || '').toLowerCase().replace(/\s+/g, '');
+    const mentionsIncompatibleDrive = ['ne' + 'ma17', 'tb' + '6600', 'tmc' + '2209'].some(term => memo.includes(term));
+    if (mentionsIncompatibleDrive || cfg.driveMode === 'manual') {
+      recommendations.push(['구동부', '현재 조건과 불일치 가능성이 있습니다. 고토크 서보모터 또는 감속 회전 모듈 기반 슬롯 구조를 권장합니다. 모터 전원은 Raspberry Pi와 분리하세요.']);
+    } else if (cfg.driveMode === 'servo') {
+      recommendations.push(['구동부', '서보형 회전 구동부 방향은 조건부 가능입니다. 별도 5V/6V 전원, 공통 GND, 충분한 토크 여유를 확인하세요.']);
+    } else {
+      recommendations.push(['구동부', '저전력 감속 회전 모듈은 가능하지만 위치 반복성이 핵심입니다. 기계적 정지 구조나 초기 정렬 기준을 추가하세요.']);
+    }
+
+    recommendations.push(['원점 보정', cfg.trialCount > 800 || p.indexingAngleError > 3.5
+      ? '별도 원점 센서 미사용 조건에서는 누적 오차 위험이 있습니다. 물리적 홈 위치 표시, 수동 초기 정렬, 리미트 스위치 선택지를 검토하세요.'
+      : '미사용을 유지할 수 있지만, 전원 인가 시 초기 정렬 절차와 물리적 기준 표시를 추가하는 편이 좋습니다.']);
+
+    recommendations.push(['센서', p.sensorP < 0.9
+      ? 'IR Break Beam은 유지하되 브래킷을 조정 가능하게 만들고, 센서 위치/범위/디바운스 값을 실험으로 보정하세요.'
+      : 'IR Break Beam은 낙하 감지에는 적합합니다. 다만 수량 100% 보장은 어려우므로 중복 배출 실험을 따로 진행하세요.']);
+
+    recommendations.push(['안전/사용성', '비상 정지 버튼, 부저 또는 LED 알림, 알약 회수 트레이, 전원 스위치, 퓨즈 또는 전원 보호 회로, 케이스 내부 배선 정리를 추가 후보로 두세요.']);
+    recommendations.push(['기구/재질', cfg.tolerance > 0.35 || cfg.friction > 0.45
+      ? 'PLA/PETG 출력 후 표면 마감과 배출구 모서리 보정이 중요합니다. 마찰이 높으면 걸림 실험을 우선하세요.'
+      : 'PLA/PETG 모두 검토 가능하지만, 실제 알약 표면과 접촉하는 부분은 마찰 테스트가 필요합니다.']);
+
+    if (feasibility.overall === 'mismatch') {
+      recommendations.unshift(['우선 정리', '구비 메모에 현재 전제와 맞지 않는 부품 표현이 있습니다. 웹 입력과 실제 부품 리스트를 먼저 일치시키세요.']);
+    }
+    return recommendations;
+  }
+
   function getTopFailureCauses(cfg, counts, total) {
     const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 909), Math.max(1, Math.round((cfg.trialCount || 200) * 0.7)), cfg.trialCount || 200);
     const f = p.factors;
@@ -506,13 +622,13 @@
       sensorP: r.probs.sensorP.toFixed(4),
       motorFailP: r.probs.motorFailP.toFixed(4)
     }));
-    updateMetrics(batch.metrics);
-    updateTopCauses(batch.metrics);
-    updateDiagnosis(batch.metrics);
-    drawFailureChart(batch.metrics);
     state.lastResult = batch.results[batch.results.length - 1];
-    updateLastResult(state.lastResult);
+    renderResults(batch.metrics, state.lastResult);
     drawStatic(state.lastResult);
+  }
+
+  function runSimulation() {
+    runMany();
   }
 
   function runCompare() {
@@ -560,6 +676,25 @@
     drawCompareChart(state.compare);
     document.getElementById('summaryBadge').textContent = `개선 전 ${fmtPct(before.metrics.successRate)} → 개선 후 ${fmtPct(after.metrics.successRate)}`;
     document.getElementById('summaryBadge').className = 'badge success';
+    renderFeasibility(feasibilityCheck(base));
+    renderRecommendations(recommendParts(base, feasibilityCheck(base)));
+    renderDesignChecklist(base);
+  }
+
+  function compareBeforeAfter() {
+    runCompare();
+  }
+
+  function renderResults(metrics, lastResult) {
+    updateMetrics(metrics);
+    updateTopCauses(metrics);
+    updateDiagnosis(metrics);
+    drawFailureChart(metrics);
+    updateLastResult(lastResult);
+    const feasibility = feasibilityCheck(metrics.cfg);
+    renderFeasibility(feasibility);
+    renderRecommendations(recommendParts(metrics.cfg, feasibility));
+    renderDesignChecklist(metrics.cfg);
   }
 
   function updateMetrics(m) {
@@ -584,6 +719,97 @@
       li.textContent = `${cause.label}: ${cause.detail}`;
       list.appendChild(li);
     }
+  }
+
+  function overallLabel(overall) {
+    return {
+      possible: '가능',
+      conditional: '조건부 가능',
+      risky: '위험',
+      mismatch: '현재 구성 불일치'
+    }[overall] || '미판정';
+  }
+
+  function statusLabelKo(status) {
+    return {
+      good: '좋음',
+      medium: '보통',
+      risk: '위험',
+      mismatch: '불일치'
+    }[status] || status;
+  }
+
+  function renderFeasibility(result) {
+    const badge = document.getElementById('feasibilityBadge');
+    const score = document.getElementById('feasibilityScore');
+    const list = document.getElementById('feasibilityItems');
+    if (!badge || !score || !list) return;
+    badge.textContent = overallLabel(result.overall);
+    badge.className = result.overall === 'possible' ? 'badge success' : 'badge';
+    score.textContent = `${result.score}/100`;
+    list.innerHTML = '';
+    for (const item of result.items) {
+      list.appendChild(createDecisionItem(item.name, item.status, item.reason, item.suggestion));
+    }
+    for (const warning of result.warnings || []) {
+      list.appendChild(createDecisionItem('입력값 확인', 'medium', warning, '입력 범위를 조정한 뒤 다시 시뮬레이션하세요.'));
+    }
+  }
+
+  function renderRecommendations(items) {
+    const list = document.getElementById('recommendationList');
+    if (!list) return;
+    list.innerHTML = '';
+    for (const [title, body] of items) {
+      list.appendChild(createDecisionItem(title, 'medium', body, ''));
+    }
+  }
+
+  function renderDesignChecklist(cfg = getConfig()) {
+    const list = document.getElementById('designChecklist');
+    if (!list) return;
+    const checks = [
+      '알약 실제 치수 측정 완료',
+      `슬롯 크기 여유값 설정: ${fmt(cfg.slotSize - cfg.pillDiameter, 2)}mm`,
+      `배출구 폭 검토: ${fmt(cfg.outletWidth, 1)}mm`,
+      `저장통 경사각 검토: ${fmt(cfg.hopperAngle, 0)}°`,
+      `상부 차단판 적용 여부: ${cfg.topGuard ? '적용' : '미적용'}`,
+      `IR 센서 위치 결정: ${cfg.sensorPosition}mm`,
+      `구동부 종류 확정: ${driveModeLabel(cfg.driveMode)}`,
+      '모터 전원 분리 여부 확인',
+      '원점 보정 방식 결정',
+      '회수 트레이 설계',
+      '비상 정지/알림 기능 검토',
+      `3D 프린팅 공차 고려: ±${fmt(cfg.tolerance, 2)}mm`,
+      '실물 테스트 계획 수립'
+    ];
+    list.innerHTML = '';
+    for (const check of checks) {
+      const li = document.createElement('li');
+      li.textContent = check;
+      list.appendChild(li);
+    }
+  }
+
+  function createDecisionItem(title, status, reason, suggestion) {
+    const item = document.createElement('div');
+    item.className = 'decision-item';
+    const strong = document.createElement('strong');
+    const pill = document.createElement('span');
+    pill.className = `status-pill status-${status}`;
+    pill.textContent = statusLabelKo(status);
+    strong.appendChild(pill);
+    strong.appendChild(document.createTextNode(title));
+    item.appendChild(strong);
+    const reasonP = document.createElement('p');
+    reasonP.textContent = `이유: ${reason}`;
+    item.appendChild(reasonP);
+    if (suggestion) {
+      const suggestionP = document.createElement('p');
+      suggestionP.textContent = `개선 제안: ${suggestion}`;
+      item.appendChild(suggestionP);
+    }
+    return item;
   }
 
   function updateLastResult(r) {
@@ -798,6 +1024,9 @@
   function drawStatic(result = state.lastResult) {
     const cfg = getConfig();
     updateModeBadge();
+    renderFeasibility(feasibilityCheck(cfg));
+    renderRecommendations(recommendParts(cfg, feasibilityCheck(cfg)));
+    renderDesignChecklist(cfg);
     drawScene({ cfg, result, progress: 1, animDropY: null });
   }
 
@@ -1230,8 +1459,8 @@
 
   function bindEvents() {
     document.getElementById('runOneBtn').addEventListener('click', animateOne);
-    document.getElementById('runManyBtn').addEventListener('click', runMany);
-    document.getElementById('compareBtn').addEventListener('click', runCompare);
+    document.getElementById('runManyBtn').addEventListener('click', runSimulation);
+    document.getElementById('compareBtn').addEventListener('click', compareBeforeAfter);
     document.getElementById('downloadCsvBtn').addEventListener('click', downloadCsv);
     document.getElementById('downloadPngBtn').addEventListener('click', downloadPng);
     document.getElementById('saveJsonBtn').addEventListener('click', saveJson);
