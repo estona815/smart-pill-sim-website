@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>스마트 알약 디스펜서 웹 시뮬레이터</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Polytechnic Mechatronics Capstone Simulator</p>
+      <h1>정량 배출 기반 스마트 알약/영양제 디스펜서 시뮬레이터</h1>
+      <p class="subtitle">부품 치수, 구비 사항, 센서/모터 조건을 입력하면 배출 성공·미배출·중복 배출·걸림·센서 실패를 가상 검증합니다.</p>
+    </div>
+    <div class="header-actions">
+      <button id="loadExampleBtn" class="ghost">예시값 불러오기</button>
+      <button id="resetBtn" class="ghost danger">초기화</button>
+      <button id="saveJsonBtn">설정 JSON 저장</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel visual-panel">
+      <div class="panel-heading row-between">
+        <div>
+          <h2>2D 동작 시뮬레이션</h2>
+          <p>회전 슬롯 휠 → 배출구 → IR 센서 감지를 단순화해 표현합니다.</p>
+        </div>
+        <span id="modeBadge" class="badge">개선 전</span>
+      </div>
+
+      <canvas id="simCanvas" width="900" height="560" aria-label="알약 디스펜서 시뮬레이션 화면"></canvas>
+
+      <div class="control-bar">
+        <button id="runOneBtn">1회 배출 애니메이션</button>
+        <button id="runManyBtn" class="primary">반복 시뮬레이션 실행</button>
+        <button id="compareBtn" class="secondary">개선 전/후 자동 비교</button>
+        <button id="downloadCsvBtn" class="ghost">CSV 저장</button>
+        <button id="downloadPngBtn" class="ghost">장면 PNG 저장</button>
+      </div>
+
+      <div class="status-strip">
+        <div>
+          <span class="label">최근 결과</span>
+          <strong id="lastStatus">대기 중</strong>
+        </div>
+        <div>
+          <span class="label">실제 배출</span>
+          <strong id="lastDrop">-</strong>
+        </div>
+        <div>
+          <span class="label">센서 카운트</span>
+          <strong id="lastSensor">-</strong>
+        </div>
+        <div>
+          <span class="label">회전각 오차</span>
+          <strong id="lastMotorError">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel input-panel">
+      <div class="panel-heading">
+        <h2>입력 정보</h2>
+        <p>실제 설계값이 있으면 mm, rpm, ms 단위로 바꿔 입력하세요.</p>
+      </div>
+
+      <details open>
+        <summary>1. 프로젝트/구비 사항</summary>
+        <label>프로젝트명
+          <input id="projectName" type="text" value="개인 맞춤형 영양제 자동 분배 시스템" />
+        </label>
+        <label>구비 부품/요구사항 메모
+          <textarea id="requirements" rows="4">Raspberry Pi 5, 9인치 HDMI 터치스크린, NEMA17 스텝모터, TB6600 또는 TMC2209, IR Break Beam 센서, A3144 홀센서, 회전 슬롯 휠, 3D 프린팅 저장통</textarea>
+        </label>
+      </details>
+
+      <details open>
+        <summary>2. 알약/저장통 조건</summary>
+        <div class="grid two">
+          <label>알약 형태
+            <select id="pillShape">
+              <option value="round">원형 정제</option>
+              <option value="oval">타원형 정제</option>
+              <option value="capsule" selected>캡슐형</option>
+            </select>
+          </label>
+          <label>알약 개수
+            <input id="pillCount" type="number" min="1" max="100" step="1" value="24" />
+          </label>
+          <label>지름/폭(mm)
+            <input id="pillDiameter" type="number" min="3" max="30" step="0.1" value="8.5" />
+          </label>
+          <label>길이(mm)
+            <input id="pillLength" type="number" min="3" max="40" step="0.1" value="17.0" />
+          </label>
+          <label>무게(g)
+            <input id="pillWeight" type="number" min="0.1" max="5" step="0.1" value="0.7" />
+          </label>
+          <label>저장통 경사각(°)
+            <input id="hopperAngle" type="number" min="5" max="60" step="1" value="32" />
+          </label>
+          <label>마찰 계수(0~1)
+            <input id="friction" type="number" min="0" max="1" step="0.01" value="0.34" />
+          </label>
+          <label>3D 프린팅 공차(±mm)
+            <input id="tolerance" type="number" min="0" max="2" step="0.05" value="0.25" />
+          </label>
+        </div>
+      </details>
+
+      <details open>
+        <summary>3. 회전 슬롯/배출구</summary>
+        <div class="grid two">
+          <label>슬롯 크기(mm)
+            <input id="slotSize" type="number" min="3" max="40" step="0.1" value="10.5" />
+          </label>
+          <label>슬롯 개수
+            <input id="slotCount" type="number" min="2" max="16" step="1" value="8" />
+          </label>
+          <label>휠 반지름(mm)
+            <input id="wheelRadius" type="number" min="20" max="120" step="1" value="55" />
+          </label>
+          <label>배출구 폭(mm)
+            <input id="outletWidth" type="number" min="3" max="50" step="0.1" value="12" />
+          </label>
+          <label>출구 모서리 보정
+            <select id="edgeChamfer">
+              <option value="0">없음</option>
+              <option value="1" selected>약간 있음</option>
+              <option value="2">충분함</option>
+            </select>
+          </label>
+          <label>상부 차단판
+            <select id="topGuard">
+              <option value="0">없음</option>
+              <option value="1" selected>있음</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <details open>
+        <summary>4. 모터/센서 조건</summary>
+        <div class="grid two">
+          <label>모터 속도(rpm)
+            <input id="motorSpeed" type="number" min="1" max="120" step="1" value="18" />
+          </label>
+          <label>1회 회전각(°)
+            <input id="motorAngle" type="number" min="1" max="180" step="0.1" value="45" />
+          </label>
+          <label>모터 자체 오차(±°)
+            <input id="motorError" type="number" min="0" max="10" step="0.1" value="1.2" />
+          </label>
+          <label>스텝/회전
+            <input id="stepsPerRev" type="number" min="50" max="800" step="1" value="200" />
+          </label>
+          <label>마이크로스텝
+            <input id="microstep" type="number" min="1" max="256" step="1" value="16" />
+          </label>
+          <label>홀센서 원점 보정
+            <select id="homeSensor">
+              <option value="0">미사용</option>
+              <option value="1" selected>사용</option>
+            </select>
+          </label>
+          <label>센서 위치 Y(mm)
+            <input id="sensorPosition" type="number" min="10" max="160" step="1" value="72" />
+          </label>
+          <label>센서 감지 범위(mm)
+            <input id="sensorRange" type="number" min="1" max="30" step="0.1" value="8" />
+          </label>
+          <label>센서 반응 시간(ms)
+            <input id="sensorResponse" type="number" min="1" max="200" step="1" value="20" />
+          </label>
+          <label>센서 디바운스(ms)
+            <input id="sensorDebounce" type="number" min="0" max="500" step="1" value="60" />
+          </label>
+        </div>
+      </details>
+
+      <details open>
+        <summary>5. 시뮬레이션 실행 조건</summary>
+        <div class="grid two">
+          <label>목표 배출 수량
+            <input id="targetCount" type="number" min="1" max="5" step="1" value="1" />
+          </label>
+          <label>반복 횟수
+            <input id="trialCount" type="number" min="10" max="5000" step="10" value="200" />
+          </label>
+          <label>난수 Seed
+            <input id="seed" type="number" min="1" max="999999" step="1" value="20260512" />
+          </label>
+          <label>구조 모드
+            <select id="designMode">
+              <option value="before">개선 전</option>
+              <option value="after" selected>개선 후</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <details>
+        <summary>6. 안전한 제어 로직 입력</summary>
+        <p class="hint">실제 JavaScript를 실행하지 않고, 아래 key=value 형식만 해석합니다. 예: retry=1, motorRamp=0.8</p>
+        <textarea id="controlCode" rows="7">retry=1
+motorRamp=0.75
+doubleDetect=true
+sensorCheck=true
+homeSensor=true
+alarmOnFail=true</textarea>
+        <div class="mini-actions">
+          <button id="applyCodeBtn" class="ghost">제어 로직 적용</button>
+          <span id="codeStatus" class="hint">대기 중</span>
+        </div>
+      </details>
+
+      <details>
+        <summary>7. 설정 JSON 직접 입력</summary>
+        <p class="hint">Codex나 GPT가 만들어준 JSON을 붙여넣고 적용할 수 있습니다.</p>
+        <textarea id="jsonInput" rows="8" placeholder='{"pillDiameter":8.5,"slotSize":10.5,"motorSpeed":18}'></textarea>
+        <div class="mini-actions">
+          <button id="applyJsonBtn" class="ghost">JSON 적용</button>
+          <button id="copyJsonBtn" class="ghost">현재 설정 복사</button>
+        </div>
+      </details>
+    </aside>
+
+    <section class="panel metrics-panel">
+      <div class="panel-heading row-between">
+        <div>
+          <h2>결과 대시보드</h2>
+          <p>정확 배출률과 실패 유형을 수치로 확인합니다.</p>
+        </div>
+        <span id="summaryBadge" class="badge success">결과 없음</span>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric"><span>총 시도</span><strong id="mTotal">0</strong></div>
+        <div class="metric"><span>정확 배출률</span><strong id="mSuccess">0%</strong></div>
+        <div class="metric"><span>미배출률</span><strong id="mNoDrop">0%</strong></div>
+        <div class="metric"><span>중복 배출률</span><strong id="mDouble">0%</strong></div>
+        <div class="metric"><span>걸림률</span><strong id="mJam">0%</strong></div>
+        <div class="metric"><span>센서 실패률</span><strong id="mSensorFail">0%</strong></div>
+        <div class="metric"><span>평균 배출 시간</span><strong id="mAvgTime">0.00s</strong></div>
+        <div class="metric"><span>평균 회전각 오차</span><strong id="mMotorErr">0.00°</strong></div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-card">
+          <h3>실패 유형별 횟수</h3>
+          <canvas id="failureChart" width="520" height="260"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>개선 전/후 정확 배출률</h3>
+          <canvas id="compareChart" width="520" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>값</th>
+              <th>판정 근거</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosisTable">
+            <tr><td colspan="3">반복 시뮬레이션을 실행하면 진단 결과가 표시됩니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>이 웹앱은 실제 물리엔진이 아니라, 설계 전 검토용 규칙·확률 기반 시뮬레이터입니다. 최종 치수는 실물 테스트로 보정해야 합니다.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

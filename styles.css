@@ -1,0 +1,290 @@
+:root {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --ink: #1d2433;
+  --muted: #667085;
+  --line: #d9e0ee;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --secondary: #0f766e;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
+  --soft-blue: #eaf1ff;
+  --soft-green: #e9f9ef;
+  --shadow: 0 14px 45px rgba(29, 36, 51, 0.08);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, #e8f0ff 0, transparent 32%),
+    radial-gradient(circle at top right, #eafaf3 0, transparent 28%),
+    var(--bg);
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+button:hover { transform: translateY(-1px); box-shadow: 0 7px 18px rgba(37, 99, 235, 0.22); }
+button:active { transform: translateY(0); }
+button.primary { background: var(--primary); }
+button.secondary { background: var(--secondary); }
+button.ghost {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid var(--line);
+}
+button.ghost:hover { box-shadow: 0 7px 16px rgba(51, 65, 85, 0.12); }
+button.danger { color: var(--danger); }
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px clamp(18px, 3vw, 38px) 18px;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--primary-dark);
+  letter-spacing: .07em;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+h1 {
+  margin: 0;
+  line-height: 1.2;
+  font-size: clamp(24px, 3vw, 38px);
+}
+.subtitle {
+  margin: 10px 0 0;
+  color: var(--muted);
+  max-width: 900px;
+  line-height: 1.6;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(560px, 1.35fr) minmax(340px, .75fr);
+  grid-template-areas:
+    "visual inputs"
+    "metrics inputs";
+  gap: 18px;
+  padding: 16px clamp(18px, 3vw, 38px) 32px;
+}
+.panel {
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(217,224,238,.9);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.visual-panel { grid-area: visual; }
+.input-panel { grid-area: inputs; position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow: auto; }
+.metrics-panel { grid-area: metrics; }
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.panel-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: var(--soft-blue);
+  color: var(--primary-dark);
+  font-weight: 800;
+  font-size: 13px;
+}
+.badge.success { background: var(--soft-green); color: #166534; }
+
+#simCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 14px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f8ff 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.control-bar, .mini-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  align-items: center;
+}
+.status-strip {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+}
+.status-strip div, .metric {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfdff;
+}
+.label, .metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.status-strip strong, .metric strong {
+  font-size: 18px;
+}
+
+.input-panel details {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: #fbfdff;
+  margin-top: 12px;
+}
+.input-panel summary {
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+}
+.input-panel label {
+  display: block;
+  margin-top: 12px;
+  color: #334155;
+  font-weight: 700;
+  font-size: 13px;
+}
+.input-panel input, .input-panel select, .input-panel textarea {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 11px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+.input-panel input:focus, .input-panel select:focus, .input-panel textarea:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+textarea { resize: vertical; }
+.grid.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 10px;
+}
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.metric-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.metric strong { font-size: 22px; }
+.charts {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.chart-card {
+  border: 1px solid var(--line);
+  background: #fbfdff;
+  border-radius: 18px;
+  padding: 14px;
+}
+.chart-card h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+.chart-card canvas {
+  width: 100%;
+  height: auto;
+}
+.table-wrap {
+  margin-top: 16px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #f8fafc; color: #334155; }
+tr:last-child td { border-bottom: 0; }
+
+footer {
+  padding: 0 clamp(18px, 3vw, 38px) 34px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 1120px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "visual"
+      "inputs"
+      "metrics";
+  }
+  .input-panel { position: static; max-height: none; }
+}
+@media (max-width: 760px) {
+  .app-header { flex-direction: column; }
+  .header-actions { justify-content: flex-start; }
+  .status-strip, .metric-grid, .charts, .grid.two { grid-template-columns: 1fr; }
+  button { width: 100%; }
+}
