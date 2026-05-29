@@ -1,0 +1,5 @@
+{
+  "progress": "handoff_skeleton",
+  "top_risks": ["actual test data missing", "hardware readiness blocked", "dashboard needs final polish"],
+  "next_actions": ["import real test data", "fill hardware evidence", "run professor demo rehearsal"]
+}

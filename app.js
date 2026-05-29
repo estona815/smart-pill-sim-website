@@ -814,6 +814,7 @@
     renderRecommendations(recommendParts(metrics.cfg, feasibility));
     renderDesignChecklist(metrics.cfg);
     renderCalibrationSummary(metrics.cfg);
+    renderReportText(metrics);
   }
 
   function updateMetrics(m) {
@@ -942,6 +943,97 @@
       list.appendChild(createDecisionItem('데이터 합계 확인', 'medium',
         `입력 항목 합계 ${calibration.sum}회와 총 횟수 ${calibration.total}회가 다릅니다.`,
         '총 횟수와 유형별 횟수를 맞추면 보고서 표로 쓰기 더 좋습니다.'));
+    }
+  }
+
+  function failureLabel(key) {
+    return {
+      no_drop: '미배출',
+      double_drop: '중복 배출',
+      jam: '알약 걸림',
+      sensor_fail: '센서 감지 실패',
+      motor_error: '구동 위치 오차'
+    }[key] || key;
+  }
+
+  function buildReportText(metrics = null) {
+    const batchMetrics = metrics || state.metrics || runBatch().metrics;
+    const cfg = batchMetrics.cfg;
+    const feasibility = feasibilityCheck(cfg);
+    const p = calcProbabilities(cfg, mulberry32((cfg.seed || 1) + 321), Math.max(1, Math.round((cfg.trialCount || 200) * 0.65)), cfg.trialCount || 200);
+    const topCauses = batchMetrics.topCauses || getTopFailureCauses(cfg, batchMetrics.counts, batchMetrics.total);
+    const highestFailure = Object.entries({
+      no_drop: batchMetrics.noDropRate,
+      double_drop: batchMetrics.doubleRate,
+      jam: batchMetrics.jamRate,
+      sensor_fail: batchMetrics.sensorFailRate,
+      motor_error: batchMetrics.motorErrorRate
+    }).sort((a, b) => b[1] - a[1])[0];
+    const calibration = getCalibration(cfg);
+    const checklist = [
+      '알약 실제 지름, 길이, 무게를 캘리퍼스와 저울로 측정한다.',
+      '슬롯 크기와 배출구 폭을 출력 공차를 포함해 다시 확인한다.',
+      'MG996R 서보 전원은 Raspberry Pi에서 직접 공급하지 않고 별도 6V 또는 Buck 6V로 공급한다.',
+      'Raspberry Pi GND와 서보 전원 GND를 공통 연결한 뒤 부하 시 전압 강하를 측정한다.',
+      '토출부 포토센서/IR이 알약 낙하 경로를 반드시 지나도록 브래킷 위치를 조정한다.',
+      '1회, 10회, 30회 이상 반복 배출 테스트로 미배출, 중복 배출, 걸림, 센서 실패, 구동 오차를 기록한다.',
+      '전원 재시작 후 수동 초기 정렬 표시선 또는 물리적 기준 위치로 시작 상태를 확인한다.'
+    ];
+    const powerRisk = powerCheck(cfg).riskScore;
+    const powerSentence = powerRisk > 0.35
+      ? '전원 구조는 현재 조건에서 위험 요소가 있으므로 24V 직접 연결, Pi 5V 핀 직접 공급, GND 분리 여부를 먼저 수정해야 한다.'
+      : '전원 구조는 Raspberry Pi 5V/5A USB-C와 서보 별도 6V 전원을 분리하고 공통 GND를 맞추는 조건에서 기본적으로 검토 가능하다.';
+    const homeSentence = cfg.homeMode === 'none'
+      ? '원점 자동 보정이 없으면 단기 데모는 가능하더라도 반복 운용 중 위치 누적 오차를 스스로 복구하기 어렵다.'
+      : '현재 원점 조건은 단기 데모에서는 수동 초기 정렬로 운영 가능하지만 장기 운용 전에는 물리적 기준 위치 확인 절차가 필요하다.';
+
+    return [
+      '[한 문장 요약]',
+      '가상 검증을 통해 제작 오차를 줄이는 스마트 알약 자동 분배 시스템',
+      '',
+      '[발표 3줄 설명]',
+      `본 프로젝트는 Raspberry Pi 5, MG996R 서보모터, 토출부 포토센서/IR을 기준으로 알약 1개 정량 배출 가능성을 웹 시뮬레이터에서 먼저 검토한다.`,
+      `현재 입력값 기준 반복 시뮬레이션 ${batchMetrics.total}회에서 정확 배출률은 ${fmtPct(batchMetrics.successRate)}이며, 가장 큰 실패 유형은 ${failureLabel(highestFailure[0])}(${fmtPct(highestFailure[1])})로 나타났다.`,
+      `슬롯 크기, 배출구 폭, 동작 속도, 센서 위치를 조정해 미배출, 중복 배출, 걸림, 센서 감지 실패, 구동 위치 오차를 제작 전에 비교한다.`,
+      '',
+      '[보고서 문장]',
+      `본 시뮬레이터는 ${shapeLabel(cfg.pillShape)} 알약 ${cfg.pillDiameter}×${cfg.pillLength}mm, 슬롯 ${cfg.slotSize}mm, 배출구 ${cfg.outletWidth}mm, 구동각 ${cfg.motorAngle}° 조건을 입력받아 정량 배출 성공률과 실패 유형을 규칙·확률 기반으로 산출한다.`,
+      `시뮬레이션 결과 정확 배출률은 ${fmtPct(batchMetrics.successRate)}, 미배출률은 ${fmtPct(batchMetrics.noDropRate)}, 중복 배출률은 ${fmtPct(batchMetrics.doubleRate)}, 걸림률은 ${fmtPct(batchMetrics.jamRate)}, 센서 실패률은 ${fmtPct(batchMetrics.sensorFailRate)}, 구동 위치 오차율은 ${fmtPct(batchMetrics.motorErrorRate)}로 나타났다.`,
+      `주요 위험 요인은 ${topCauses.map(cause => cause.label).join(', ')} 순으로 확인되었으며, 이는 실제 제작 전 치수 조정과 센서 브래킷 위치 결정의 우선순위로 활용할 수 있다.`,
+      powerSentence,
+      homeSentence,
+      calibration.active
+        ? `실물 테스트 데이터 ${calibration.total}회는 보정 가중치 ${fmt(calibration.confidence, 2)}로 확률식에 완만하게 반영되었으며, 이후 반복 실험 데이터를 누적해 모델 신뢰도를 높여야 한다.`
+        : '실물 테스트 데이터가 아직 충분하지 않으므로 초안 제작 후 최소 10회 이상 배출 결과를 기록해 확률식을 보정해야 한다.',
+      `현재 설계 가능성 판정은 ${overallLabel(feasibility.overall)}(${feasibility.score}/100)이며, 본 웹앱은 실제 성공률을 보증하는 도구가 아니라 제작 전 위험을 선별하는 검토 도구로 사용한다.`,
+      '',
+      '[추천 조정 우선순위]',
+      `1. 슬롯 크기: 현재 슬롯 여유 ${fmt(p.slotClearance, 2)}mm를 기준으로 미배출과 중복 배출 균형을 확인한다.`,
+      `2. 배출구 폭: 현재 배출구 여유 ${fmt(p.outletClearance, 2)}mm를 기준으로 걸림과 중복 배출 가능성을 함께 검토한다.`,
+      `3. 동작 속도: 현재 ${cfg.motorSpeed}rpm 조건에서 구동 위치 오차와 걸림률을 비교하고, 단기 데모는 낮은 속도부터 시험한다.`,
+      `4. 센서 위치: 현재 ${cfg.sensorPosition}mm, 감지 범위 ${cfg.sensorRange}mm 조건에서 센서 감지 확률 ${fmtPct(p.sensorP)}를 기준으로 브래킷 위치를 보정한다.`,
+      '',
+      '[제작 전 테스트 체크리스트]',
+      ...checklist.map((item, index) => `${index + 1}. ${item}`)
+    ].join('\n');
+  }
+
+  function renderReportText(metrics = null) {
+    const output = document.getElementById('reportOutput');
+    if (!output) return;
+    output.value = buildReportText(metrics);
+  }
+
+  async function copyReportText() {
+    renderReportText();
+    const output = document.getElementById('reportOutput');
+    if (!output) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+    } catch (_) {
+      output.focus();
+      output.select();
+      document.execCommand('copy');
     }
   }
 
@@ -1703,6 +1795,8 @@
     document.getElementById('applyJsonBtn').addEventListener('click', applyJson);
     document.getElementById('applyCalibrationBtn').addEventListener('click', applyCalibration);
     document.getElementById('clearCalibrationBtn').addEventListener('click', clearCalibration);
+    document.getElementById('generateReportBtn').addEventListener('click', () => renderReportText());
+    document.getElementById('copyReportBtn').addEventListener('click', copyReportText);
     document.getElementById('loadExampleBtn').addEventListener('click', loadExample);
     document.getElementById('resetBtn').addEventListener('click', resetDefaults);
     document.getElementById('applyCodeBtn').addEventListener('click', () => applyControlCode(true));

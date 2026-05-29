@@ -2,7 +2,21 @@ const fs = require('fs');
 const path = require('path');
 
 const root = process.cwd();
-const files = ['index.html', 'app.js', 'README.md', 'CODEX_PROMPT.md', 'GPT_PROMPT.md'];
+const files = [
+  'index.html',
+  'admin.html',
+  'demo.html',
+  'app.js',
+  'admin.js',
+  'demo.js',
+  'hardware-mock.js',
+  'README.md',
+  'CODEX_PROMPT.md',
+  'GPT_PROMPT.md',
+  'HANDOFF_PIPELINE.md',
+  'WEB_FINAL_QC_REPORT.md',
+  'scripts/measurement-error.js'
+];
 const banned = [
   'NEMA17',
   'TB6600',
@@ -57,6 +71,35 @@ const queriedIds = [...js.matchAll(/getElementById\('([^']+)'\)|querySelector\('
   .map(match => match[1] || match[2]);
 for (const id of new Set(queriedIds)) {
   if (!ids.has(id)) fail(`index.html: missing element id queried by app.js: ${id}`);
+}
+
+function validateHtmlJsPair(htmlFile, jsFile) {
+  const pageHtml = read(htmlFile);
+  const pageJs = read(jsFile);
+  const pageIds = new Set([...pageHtml.matchAll(/id="([^"]+)"/g)].map(match => match[1]));
+  const pageQueriedIds = [...pageJs.matchAll(/getElementById\('([^']+)'\)|querySelector\('#([^']+)'\)/g)]
+    .map(match => match[1] || match[2]);
+  for (const id of new Set(pageQueriedIds)) {
+    if (!pageIds.has(id)) fail(`${htmlFile}: missing element id queried by ${jsFile}: ${id}`);
+  }
+}
+
+validateHtmlJsPair('admin.html', 'admin.js');
+validateHtmlJsPair('demo.html', 'demo.js');
+
+const measurement = require('./measurement-error');
+const sampleError = measurement.calculateMeasurementError('10.0mm', '10.4mm', 5);
+if (!sampleError.ok || sampleError.grade === 'invalid') fail('scripts/measurement-error.js: sample error calculation failed');
+
+for (const requiredFile of [
+  'data/actual_performance.json',
+  'data/hardware_readiness_gate.json',
+  'control_layer/control_config.json',
+  'docs/pre_connection_checklist.md',
+  'docs/workshop_checklist.md',
+  'Makefile'
+]) {
+  if (!fs.existsSync(path.join(root, requiredFile))) fail(`required handoff file missing: ${requiredFile}`);
 }
 
 for (const required of ['MG996R', '5V/5A', '6V', '토출부 포토센서', '공통 GND']) {

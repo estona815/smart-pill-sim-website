@@ -1,0 +1,7 @@
+{
+  "control_mode": "DRY_RUN",
+  "real_hardware_enabled": false,
+  "requires_hardware_gate_pass": true,
+  "allowed_modes": ["DRY_RUN", "MOCK", "REAL_DISABLED"],
+  "forbidden_until_verified": ["GPIO_OUTPUT", "MOTOR_DRIVE", "SENSOR_DIRECT_READ", "POWER_SWITCHING"]
+}

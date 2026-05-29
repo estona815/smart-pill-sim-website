@@ -1,0 +1,27 @@
+{
+  "gate_status": "BLOCKED",
+  "updated_at": "2026-05-29T03:21:57.755163+00:00",
+  "sections": {
+    "power": [],
+    "raspberry_pi": [],
+    "motor": [],
+    "sensor": [],
+    "mechanical": [],
+    "emergency_stop": []
+  },
+  "blocking_items": [
+    "DC-DC 컨버터 출력 전압 5V 실측",
+    "Raspberry Pi 입력 전압 5V 안정성 확인",
+    "24V가 Pi로 직접 들어가지 않는 구조 확인",
+    "모터 전원과 Pi 전원 경로 분리 확인",
+    "GND 공통 처리 계획 확인",
+    "센서 출력 전압 3.3V 호환 확인",
+    "긴급 정지 스위치 설계 확인"
+  ],
+  "warnings": [
+    "No measured evidence has been provided."
+  ],
+  "next_actions": [
+    "Fill required evidence before any physical connection."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "gate_status": "BLOCKED",
+  "updated_at": "",
+  "sections": {
+    "power": [],
+    "raspberry_pi": [],
+    "motor": [],
+    "sensor": [],
+    "mechanical": [],
+    "emergency_stop": []
+  },
+  "blocking_items": [
+    "DC-DC output voltage evidence missing",
+    "Raspberry Pi protection evidence missing",
+    "Emergency stop evidence missing"
+  ],
+  "warnings": ["No measured evidence has been provided."],
+  "next_actions": ["Fill required evidence before any physical connection."]
+}

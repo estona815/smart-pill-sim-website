@@ -8,6 +8,29 @@
 
 공개 웹사이트: https://estona815.github.io/smart-pill-sim-website/
 
+## 작업 인계 목적
+
+이 저장소는 다른 컴퓨터에서 총괄 작업을 이어가기 위한 러프한 웹앱 틀과 검수 하네스를 포함한다. 최종 제작/보고서 작업자는 `HANDOFF_PIPELINE.md`, `GPT_PROMPT.md`, `CODEX_PROMPT.md`를 먼저 확인한 뒤 실제 치수와 테스트 데이터를 반영한다.
+
+현재 추가 인계 화면은 다음과 같다.
+
+- `index.html`: Dashboard V2 관제형 시뮬레이터
+- `admin.html`: 팀원 입력/수정 및 공유 JSON 내보내기
+- `demo.html`: 교수 시연용 Demo Mode
+- `WEB_FINAL_QC_REPORT.md`: 최종 웹 QC 보고서 초안
+
+## 추가 인수인계 골격
+
+- 실제 테스트 결과 import/analyze: `scripts/import_test_results.py`, `scripts/analyze_test_results.py`
+- 하드웨어 실제 연결 전 안전 게이트: `data/hardware_readiness_gate.json`, `scripts/check_hardware_readiness.py`
+- 실제 제어 코드 분리 경계: `control_layer/`
+- 팀원 daily standup: `dashboard/standup.html`, `scripts/generate_daily_summary.py`
+- 교수 중간점검 패키지: `outputs/reports/professor_*`
+- 현장 제작 체크리스트: `docs/workshop_checklist.md`, `docs/safety_checklist.md`
+- 백업/복구 골격: `scripts/backup_project_data.py`, `scripts/restore_project_data.py`
+- 제출 패키지 생성: `scripts/build_submission_package.py`
+- E2E 리허설 골격: `scripts/e2e_rehearsal.py`, `Makefile`
+
 ## 현재 하드웨어 전제
 
 - Raspberry Pi 5 사용
@@ -72,11 +95,30 @@
 - 전원 연결 위험 판정
 - 포토센서 감지 안정성 판정
 - 원점 자동 보정 없음에 따른 누적 오차 위험 표시
+- 발표/보고서 문장 생성
+- 팀원 입력/수정용 Admin 화면
+- 측정값 기반 오차 계산 스크립트
+- 실제 제어 없는 hardware mock layer
+- 교수 시연용 Demo Mode
 - 권장 부품 수정안
 - 설계 전 체크리스트
 - 실패 유형별 그래프
 - 개선 전/후 성공·실패율 비교 그래프
 - GitHub Actions 기반 정적 검수: JavaScript 문법, HTML/JS ID 연결, 구형 부품 문구 재등장 확인
+
+## 검수
+
+Node.js가 설치된 환경에서는 아래 명령으로 정적 검수 하네스를 실행한다.
+
+```bash
+npm test
+```
+
+현재 검수 스크립트의 직접 실행 명령은 다음과 같다.
+
+```bash
+node scripts/validate-static-site.js
+```
 
 ## 실패 유형
 
