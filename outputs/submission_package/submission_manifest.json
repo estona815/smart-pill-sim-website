@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-05-29T12:21:57.764573",
+  "included_files": [
+    "outputs/reports/professor_checkpoint_summary.md",
+    "docs/hardware_readiness_gate.md",
+    "docs/workshop_checklist.md",
+    "WEB_FINAL_QC_REPORT.md"
+  ],
+  "missing_files": [],
+  "package_status": "READY",
+  "notes": "handoff skeleton"
+}

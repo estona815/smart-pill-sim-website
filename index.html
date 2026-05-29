@@ -12,6 +12,12 @@
       <p class="eyebrow">Polytechnic Mechatronics Capstone Simulator</p>
       <h1>정량 배출 기반 스마트 알약/영양제 디스펜서 시뮬레이터</h1>
       <p class="subtitle">부품 치수, 구비 사항, 구동부/센서 조건을 입력하면 배출 성공·미배출·중복 배출·걸림·센서 실패를 가상 검증합니다.</p>
+      <nav class="page-nav" aria-label="프로젝트 웹 화면">
+        <a href="index.html" aria-current="page">Dashboard V2</a>
+        <a href="admin.html">Team Admin</a>
+        <a href="demo.html">Demo Mode</a>
+        <a href="WEB_FINAL_QC_REPORT.md">QC Report</a>
+      </nav>
     </div>
     <div class="header-actions">
       <button id="loadExampleBtn" class="ghost">예시값 불러오기</button>
@@ -21,6 +27,29 @@
   </header>
 
   <main class="layout">
+    <section class="panel command-panel">
+      <div>
+        <span class="label">운영 상태</span>
+        <strong>Web simulation only</strong>
+        <p>실제 GPIO, 모터, 센서 제어 없이 설계 전 위험을 선별합니다.</p>
+      </div>
+      <div>
+        <span class="label">팀원 입력</span>
+        <strong>admin.html</strong>
+        <p>부품/측정값/담당자 메모를 공유용 JSON으로 정리합니다.</p>
+      </div>
+      <div>
+        <span class="label">오차관리</span>
+        <strong>measurement-error.js</strong>
+        <p>목표값 대비 측정값 오차율과 판정 등급을 계산합니다.</p>
+      </div>
+      <div>
+        <span class="label">시연 모드</span>
+        <strong>demo.html</strong>
+        <p>교수 시연용 흐름을 PASS가 아닌 DEMO 상태로 표시합니다.</p>
+      </div>
+    </section>
+
     <section class="panel visual-panel">
       <div class="panel-heading row-between">
         <div>
@@ -417,6 +446,17 @@ jamRecovery=false</textarea>
         <div id="calibrationSummary" class="decision-list">
           <p class="hint">실물 테스트 데이터를 입력하면 모델 보정 상태가 표시됩니다.</p>
         </div>
+      </section>
+
+      <section class="decision-card report-card">
+        <div class="row-between">
+          <h3>발표/보고서 문장 생성</h3>
+          <div class="inline-actions">
+            <button id="generateReportBtn" class="ghost">문장 생성</button>
+            <button id="copyReportBtn" class="ghost">복사</button>
+          </div>
+        </div>
+        <textarea id="reportOutput" class="report-output" rows="12" readonly>반복 시뮬레이션을 실행하거나 문장 생성을 누르면 발표와 보고서에 사용할 문장이 표시됩니다.</textarea>
       </section>
 
       <div class="table-wrap">

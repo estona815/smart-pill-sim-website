@@ -1,0 +1,6 @@
+{
+  "status": "SIMULATION_ONLY",
+  "simulation_success_rate": null,
+  "simulation_failure_rate": null,
+  "notes": "Keep separate from actual_performance.json."
+}

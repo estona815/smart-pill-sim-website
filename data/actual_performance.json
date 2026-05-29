@@ -1,0 +1,27 @@
+{
+  "status": "NO_ACTUAL_TEST_DATA",
+  "sample_count": 0,
+  "success_count": 0,
+  "failure_count": 0,
+  "actual_success_rate": null,
+  "actual_failure_rate": null,
+  "sensor_detection_rate": null,
+  "failure_breakdown": {
+    "jam": 0,
+    "double_dispense": 0,
+    "no_dispense": 0,
+    "sensor_miss": 0,
+    "motor_fail": 0,
+    "power_issue": 0
+  },
+  "confidence_level": "LOW",
+  "target_success_rate": 90,
+  "target_met": false,
+  "warnings": [
+    "Sample count is below 10; confidence is LOW.",
+    "Target achievement cannot be confirmed with fewer than 30 samples."
+  ],
+  "recommendations": [
+    "Add more recorded tests before using actual success rate in final report."
+  ]
+}

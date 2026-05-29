@@ -1,0 +1,3 @@
+body { font-family: system-ui, sans-serif; margin: 32px; color: #1d2433; background: #f5f7fb; }
+textarea { width: 100%; max-width: 920px; display: block; margin: 16px 0; }
+button { min-height: 40px; padding: 8px 14px; }

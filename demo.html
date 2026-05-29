@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Mode · 스마트 알약 디스펜서</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Professor Demonstration Mode</p>
+      <h1>교수 시연용 Demo Mode</h1>
+      <p class="subtitle">실제 하드웨어 제어 없이 터치 UI, 가상 서보 구동, 가상 센서 감지, 실패 안내 흐름을 보여주는 시연 화면입니다.</p>
+      <nav class="page-nav" aria-label="프로젝트 웹 화면">
+        <a href="index.html">Dashboard V2</a>
+        <a href="admin.html">Team Admin</a>
+        <a href="demo.html" aria-current="page">Demo Mode</a>
+        <a href="WEB_FINAL_QC_REPORT.md">QC Report</a>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <button id="demoMorningBtn">아침</button>
+      <button id="demoLunchBtn" class="secondary">점심</button>
+      <button id="demoEveningBtn" class="ghost">저녁</button>
+    </div>
+  </header>
+
+  <main class="demo-layout">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>시연 흐름</h2>
+        <p>선택 → 가상 구동 → 가상 센서 확인 → 화면 안내 순서로 진행합니다.</p>
+      </div>
+      <div class="demo-device">
+        <div class="demo-screen">
+          <span id="demoSlotLabel" class="badge">대기</span>
+          <strong id="demoMainStatus">복용 시간대를 선택하세요</strong>
+          <p id="demoDetail">이 화면은 실제 테스트 완료나 실제 성공률을 의미하지 않습니다.</p>
+        </div>
+        <div class="demo-wheel" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div id="demoSensor" class="demo-sensor">IR MOCK</div>
+      </div>
+      <div class="control-bar">
+        <button id="runDemoBtn" class="primary">가상 1회 배출</button>
+        <button id="resetDemoBtn" class="ghost">Mock 초기화</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading row-between">
+        <div>
+          <h2>Demo 로그</h2>
+          <p>실제 GPIO, 모터, 센서 접근 없이 mock 이벤트만 기록합니다.</p>
+        </div>
+        <span class="badge">DEMO ONLY</span>
+      </div>
+      <ol id="demoLog" class="demo-log">
+        <li>아직 실행된 시연이 없습니다.</li>
+      </ol>
+      <div class="cause-panel">
+        <h3>시연 멘트</h3>
+        <p>“현재 화면은 실제 하드웨어 동작 결과가 아니라, 제작 전 검증 흐름과 실패 안내 방식을 보여주는 Demo Mode입니다.”</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Demo Mode는 교수 시연용 mock 화면이며 실제 테스트 전 PASS 처리나 성공률 확정 표현을 하지 않습니다.</p>
+  </footer>
+
+  <script src="hardware-mock.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>
