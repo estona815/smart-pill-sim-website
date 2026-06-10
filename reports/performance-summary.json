@@ -1,0 +1,57 @@
+{
+  "generatedAt": "2026-06-10T16:00:23.215Z",
+  "dist": "/Users/hantaeheuk/Documents/Codex/2026-06-11/files-mentioned-by-the-user-nutronics/work/smart-pill-sim-website/dist",
+  "totalBytes": 233136,
+  "appJsBytes": 9551,
+  "appJsUnder100KB": true,
+  "files": [
+    {
+      "file": "assets/product-render.webp",
+      "bytes": 74478
+    },
+    {
+      "file": "assets/project-os.webp",
+      "bytes": 66516
+    },
+    {
+      "file": "assets/ai-dashboard.webp",
+      "bytes": 51834
+    },
+    {
+      "file": "app.js",
+      "bytes": 9551
+    },
+    {
+      "file": "index.html",
+      "bytes": 9368
+    },
+    {
+      "file": "styles.css",
+      "bytes": 5056
+    },
+    {
+      "file": "app.js.gz",
+      "bytes": 3618
+    },
+    {
+      "file": "index.html.gz",
+      "bytes": 3546
+    },
+    {
+      "file": "app.js.br",
+      "bytes": 3123
+    },
+    {
+      "file": "index.html.br",
+      "bytes": 2827
+    },
+    {
+      "file": "styles.css.gz",
+      "bytes": 1734
+    },
+    {
+      "file": "styles.css.br",
+      "bytes": 1485
+    }
+  ]
+}

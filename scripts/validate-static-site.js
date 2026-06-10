@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 const root = process.cwd();
 const files = ['index.html', 'app.js', 'README.md', 'CODEX_PROMPT.md', 'GPT_PROMPT.md'];

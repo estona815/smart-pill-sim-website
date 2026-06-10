@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-06-10T16:01:13.514Z",
+  "checks": {
+    "distExists": true,
+    "appJsUnder100KB": true,
+    "noOversizedImagesOver500KB": true,
+    "hasExplicitImageDimensions": true,
+    "hasLazyImages": true,
+    "compressedAssetsPresent": true
+  },
+  "sizes": {
+    "html": 9368,
+    "css": 5056,
+    "appJs": 9551,
+    "images": [
+      {
+        "file": "assets/ai-dashboard.webp",
+        "bytes": 51834
+      },
+      {
+        "file": "assets/product-render.webp",
+        "bytes": 74478
+      },
+      {
+        "file": "assets/project-os.webp",
+        "bytes": 66516
+      }
+    ]
+  },
+  "lighthouse": {
+    "status": "not-run-in-this-environment",
+    "reason": "npm/lhci package manager is unavailable in this Codex runtime; lighthouserc.json and lhci script are prepared for the destination machine."
+  }
+}
