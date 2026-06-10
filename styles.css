@@ -430,6 +430,41 @@ picture, img {
   gap: 9px;
   margin-top: 14px;
 }
+.gallery-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.ppt-contact {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.ppt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.ppt-grid figure {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.ppt-grid img {
+  border: 0;
+  border-radius: 0;
+}
+.ppt-grid figcaption {
+  padding: 9px 11px 11px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #08765f;
+}
 .proof-copy {
   border-color: rgba(15,159,143,.28);
   background: #effcf9;
@@ -451,6 +486,8 @@ picture, img {
   .app-shell { grid-template-columns: 1fr; }
   .controls { max-height: none; }
   .flow-grid { grid-template-columns: 1fr 1fr; }
+  .ppt-grid { grid-template-columns: 1fr 1fr; }
+  .gallery-head { flex-direction: column; }
   .split, .split.reverse { grid-template-columns: 1fr; }
   .split.reverse > div, .split.reverse > picture { order: initial; }
   .split.reverse > img { order: initial; }
@@ -460,6 +497,7 @@ picture, img {
 @media (max-width: 520px) {
   .topbar, .app-shell, .evidence-sections, footer { padding-left: 12px; padding-right: 12px; }
   .grid, .actions, .flow-grid { grid-template-columns: 1fr; }
+  .ppt-grid { grid-template-columns: 1fr; }
   .panel-head { flex-direction: column; }
   .stage-tools { justify-items: start; }
   .step-rail { grid-template-columns: repeat(2, 1fr); }

@@ -83,6 +83,7 @@
 - Project OS Mockup: 회의록, SolidWorks/배선도/시연 영상 자료 링크, GitHub 커밋/검증 리포트, 다음 액션/담당자/마감일
 - Future Concept: 4통 카트리지, 7인치 전면 터치 UI, 하단 배출 트레이, 내부 RPi5/PCA9685/SMPS/퓨즈박스 배치 시안
 - GitHub Evidence: 실제 확인 가능한 URL/파일만 증빙으로 사용하고, 발표용 이미지는 시각 보조로 분리 표기
+- PPT Source Images: polished PPT에서 추출한 AI 파이프라인, 검증 하네스, AI 시뮬레이터, GitHub 증빙, Project OS, Future Concept 슬라이드 캡처를 웹에 직접 반영
 
 ## 실제 증빙 파일
 

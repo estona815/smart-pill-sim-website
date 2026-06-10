@@ -1,10 +1,14 @@
 {
-  "generatedAt": "2026-06-10T16:17:37.779Z",
+  "generatedAt": "2026-06-10T16:27:50.284Z",
   "dist": "/Users/hantaeheuk/Documents/Codex/2026-06-11/files-mentioned-by-the-user-nutronics/work/smart-pill-sim-website/dist",
-  "totalBytes": 259619,
+  "totalBytes": 510963,
   "appJsBytes": 11207,
   "appJsUnder100KB": true,
   "files": [
+    {
+      "file": "assets/ppt-focus-contact-sheet.webp",
+      "bytes": 83452
+    },
     {
       "file": "assets/product-render.webp",
       "bytes": 74478
@@ -18,8 +22,32 @@
       "bytes": 51834
     },
     {
+      "file": "assets/ppt-future-concept.webp",
+      "bytes": 32588
+    },
+    {
+      "file": "assets/ppt-project-os.webp",
+      "bytes": 32000
+    },
+    {
+      "file": "assets/ppt-github-evidence.webp",
+      "bytes": 29778
+    },
+    {
+      "file": "assets/ppt-ai-simulator-loop.webp",
+      "bytes": 26906
+    },
+    {
+      "file": "assets/ppt-validation-harness.webp",
+      "bytes": 23510
+    },
+    {
+      "file": "assets/ppt-ai-pipeline.webp",
+      "bytes": 18920
+    },
+    {
       "file": "index.html",
-      "bytes": 14346
+      "bytes": 16855
     },
     {
       "file": "app.js",
@@ -27,23 +55,23 @@
     },
     {
       "file": "styles.css",
-      "bytes": 8413
+      "bytes": 9034
     },
     {
       "file": "index.html.gz",
-      "bytes": 4927
+      "bytes": 5409
     },
     {
       "file": "assets/ai-simulator-dashboard.svg",
       "bytes": 4466
     },
     {
-      "file": "app.js.gz",
-      "bytes": 4193
+      "file": "index.html.br",
+      "bytes": 4460
     },
     {
-      "file": "index.html.br",
-      "bytes": 4054
+      "file": "app.js.gz",
+      "bytes": 4193
     },
     {
       "file": "app.js.br",
@@ -59,11 +87,11 @@
     },
     {
       "file": "styles.css.gz",
-      "bytes": 2594
+      "bytes": 2690
     },
     {
       "file": "styles.css.br",
-      "bytes": 2247
+      "bytes": 2323
     }
   ]
 }

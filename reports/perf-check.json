@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T16:17:37.861Z",
+  "generatedAt": "2026-06-10T16:27:50.374Z",
   "checks": {
     "distExists": true,
     "appJsUnder100KB": true,
@@ -9,8 +9,8 @@
     "compressedAssetsPresent": true
   },
   "sizes": {
-    "html": 14346,
-    "css": 8413,
+    "html": 16855,
+    "css": 9034,
     "appJs": 11207,
     "images": [
       {
@@ -24,6 +24,34 @@
       {
         "file": "assets/future-concept.svg",
         "bytes": 3389
+      },
+      {
+        "file": "assets/ppt-ai-pipeline.webp",
+        "bytes": 18920
+      },
+      {
+        "file": "assets/ppt-ai-simulator-loop.webp",
+        "bytes": 26906
+      },
+      {
+        "file": "assets/ppt-focus-contact-sheet.webp",
+        "bytes": 83452
+      },
+      {
+        "file": "assets/ppt-future-concept.webp",
+        "bytes": 32588
+      },
+      {
+        "file": "assets/ppt-github-evidence.webp",
+        "bytes": 29778
+      },
+      {
+        "file": "assets/ppt-project-os.webp",
+        "bytes": 32000
+      },
+      {
+        "file": "assets/ppt-validation-harness.webp",
+        "bytes": 23510
       },
       {
         "file": "assets/product-render.webp",
