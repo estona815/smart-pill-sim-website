@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nutronics Smart Pill Simulator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Nutronics · Smart Pill Sim Evidence</p>
+      <h1>가로 캡슐 토출 시뮬레이터</h1>
+      <p>Raspberry Pi 5 · MG996R · 토출부 포토센서/IR · 공통 GND 조건을 바탕으로 1알 토출 가능성을 빠르게 검증합니다.</p>
+    </div>
+    <div class="header-status">
+      <span class="pill online">System Online</span>
+      <span class="pill">Rule/Probability Pre-check</span>
+      <span class="pill warn">No medical judgment</span>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="panel controls">
+      <div class="panel-head">
+        <h2>입력 조건</h2>
+        <button id="loadExampleBtn" class="ghost">예시값</button>
+      </div>
+
+      <label>프로젝트명
+        <input id="projectName" value="개인 맞춤형 영양제 자동 분배 시스템" />
+      </label>
+      <label>알약 형태
+        <select id="pillShape">
+          <option value="capsule" selected>가로 캡슐형</option>
+          <option value="oval">타원 정제</option>
+          <option value="round">원형 정제</option>
+        </select>
+      </label>
+      <div class="grid">
+        <label>지름/폭(mm)<input id="pillDiameter" type="number" value="8.5" step="0.1" /></label>
+        <label>길이(mm)<input id="pillLength" type="number" value="17.0" step="0.1" /></label>
+        <label>슬롯 크기(mm)<input id="slotSize" type="number" value="10.5" step="0.1" /></label>
+        <label>배출구 폭(mm)<input id="outletWidth" type="number" value="12.0" step="0.1" /></label>
+        <label>서보 각도(°)<input id="motorAngle" type="number" value="45" step="1" /></label>
+        <label>각도 오차(±°)<input id="actuatorErrorDeg" type="number" value="1.2" step="0.1" /></label>
+        <label>전원 안정도(%)<input id="powerStability" type="number" value="86" step="1" /></label>
+        <label>IR debounce(ms)<input id="sensorDebounce" type="number" value="80" step="5" /></label>
+        <label>반복 횟수<input id="trialCount" type="number" value="100" step="10" /></label>
+        <label>Seed<input id="seed" type="number" value="815" step="1" /></label>
+      </div>
+
+      <div class="checks">
+        <label><input id="commonGnd" type="checkbox" checked /> 공통 GND 연결</label>
+        <label><input id="dischargeSensor" type="checkbox" checked /> 토출부 포토센서/IR 사용</label>
+      </div>
+
+      <label class="wide">요구사항 메모
+        <textarea id="requirements" rows="4">Raspberry Pi 5, 5V/5A USB-C, MG996R 서보모터, 별도 6V 서보 전원, PCA9685, 토출부 포토센서 또는 IR Break Beam 센서, 회전 슬롯 휠, 가로 캡슐 토출, 공통 GND 연결</textarea>
+      </label>
+
+      <div class="actions">
+        <button id="runOneBtn">1회 토출</button>
+        <button id="runManyBtn" class="primary">100회 검증</button>
+        <button id="saveJsonBtn" class="secondary">JSON 저장</button>
+        <button id="downloadCsvBtn" class="secondary">CSV 저장</button>
+        <button id="downloadPngBtn" class="secondary">PNG 저장</button>
+        <button id="resetBtn" class="ghost">초기화</button>
+      </div>
+    </aside>
+
+    <section class="panel stage">
+      <div class="panel-head">
+        <div>
+          <h2>토출 시뮬레이션</h2>
+          <p>캡슐은 실제 구조 기준처럼 <strong>가로 방향</strong>으로 슬롯에 눕고, 배출구를 통해 옆으로 빠집니다.</p>
+        </div>
+        <span id="modeBadge" class="pill online">Demo Ready</span>
+      </div>
+      <canvas id="simCanvas" width="1040" height="620"></canvas>
+      <div class="pipeline">
+        <span>design_params.json</span>
+        <b>→</b>
+        <span>Simulator</span>
+        <b>→</b>
+        <span>Static Checks</span>
+        <b>→</b>
+        <span>validation_report.json</span>
+      </div>
+    </section>
+
+    <section class="panel metrics">
+      <div class="metric-card pass">
+        <span>Overall Result</span>
+        <strong id="overallResult">대기</strong>
+        <small id="overallNote">반복 검증을 실행하세요.</small>
+      </div>
+      <div class="metric-card">
+        <span>Success Rate</span>
+        <strong id="successRate">-</strong>
+        <small id="successCount">0 / 0</small>
+      </div>
+      <div class="metric-card">
+        <span>Failure Top 3</span>
+        <ul id="failureList">
+          <li>아직 결과 없음</li>
+        </ul>
+      </div>
+      <div class="metric-card evidence">
+        <span>Evidence Files</span>
+        <code>README.md</code>
+        <code>app.js</code>
+        <code>scripts/validate-static-site.js</code>
+        <code>validation_report.json</code>
+      </div>
+    </section>
+  </main>
+
+  <section class="evidence-sections" aria-label="AI 파이프라인 발표 섹션">
+    <article class="evidence-block">
+      <div>
+        <p class="eyebrow">AI Utilization</p>
+        <h2>AI 활용 — 설계 변경을 검증 가능한 작업 흐름으로 전환</h2>
+        <p>회의록과 설계값을 요구사항, 하드웨어 조건, 시뮬레이터 입력, 하네스 리포트, 발표 증빙으로 연결합니다. AI는 의료 판단이 아니라 반복 검토와 문서화 보조에만 사용합니다.</p>
+      </div>
+      <div class="flow-grid">
+        <span>회의록 → 요구·제약</span>
+        <span>치수/공차 → 설계 검토</span>
+        <span>전원/GND → 위험 체크</span>
+        <span>trial → 실패 유형</span>
+        <span>PASS/FAIL → JSON/CSV</span>
+        <span>README → 발표 증빙</span>
+      </div>
+    </article>
+
+    <article class="evidence-block split">
+      <div>
+        <p class="eyebrow">Validation Harness</p>
+        <h2>같은 입력, 같은 기준, 같은 리포트</h2>
+        <p><code>design_params.json</code>에서 시작해 파라미터 검사, 전원/GND 위험 체크, 센서 감지 조건, 반복 trial을 실행하고 <code>validation_report.json</code>과 <code>summary_100trials.csv</code>로 남깁니다.</p>
+        <ul class="proof-list">
+          <li>FAIL 사유: 포켓 크기, 배출구 폭, 서보 각도, IR debounce, 전원 분기/GND</li>
+          <li>재설계 입력으로 되먹임한 뒤 동일 하네스로 재검증</li>
+        </ul>
+      </div>
+      <picture>
+        <source srcset="assets/ai-dashboard.webp" type="image/webp" />
+        <img src="assets/ai-dashboard.webp" width="960" height="540" loading="lazy" decoding="async" alt="Nutronics AI 시뮬레이터와 검증 하네스 대시보드 목업" />
+      </picture>
+    </article>
+
+    <article class="evidence-block split reverse">
+      <div>
+        <p class="eyebrow">GitHub Evidence</p>
+        <h2>저장소와 공개 페이지로 증빙 구조를 남김</h2>
+        <p>실제 확인 가능한 저장소와 페이지를 기준으로 발표합니다. 화면 이미지는 발표용 목업이며, 실제 증빙은 README, 코드, 정적 검수 스크립트, 공개 URL입니다.</p>
+        <div class="repo-cards">
+          <a href="https://github.com/estona815/smart-pill-sim-website">GitHub Repository</a>
+          <a href="https://estona815.github.io/smart-pill-sim-website/">Public Site</a>
+          <code>scripts/validate-static-site.js</code>
+        </div>
+      </div>
+      <picture>
+        <source srcset="assets/project-os.webp" type="image/webp" />
+        <img src="assets/project-os.webp" width="960" height="540" loading="lazy" decoding="async" alt="회의록 자료 검증 로그를 통합한 Nutronics Project OS 화면" />
+      </picture>
+    </article>
+
+    <article class="evidence-block split">
+      <div>
+        <p class="eyebrow">Future Concept</p>
+        <h2>예상 완성형은 시안으로 분리 표기</h2>
+        <p>4통 카트리지, 7인치 터치 UI, RPi5, PCA9685, 퓨즈 분배 보드를 포함한 완성형 이미지는 발표용 시안입니다. 실제 성능 수치는 장기 반복 테스트 데이터가 쌓인 뒤 제시합니다.</p>
+      </div>
+      <picture>
+        <source srcset="assets/product-render.webp" type="image/webp" />
+        <img src="assets/product-render.webp" width="960" height="540" loading="lazy" decoding="async" alt="Nutronics 예상 완성형 제품 시안" />
+      </picture>
+    </article>
+
+    <article class="evidence-block proof-copy">
+      <p class="eyebrow">Performance Proof</p>
+      <h2>웹사이트 성능 최적화 증빙 문구</h2>
+      <p>발표용 웹사이트는 외부 CDN 없이 정적 파일로 동작하도록 정리했고, 첫 화면 JS를 단일 경량 스크립트로 유지했습니다. AI 시뮬레이션/검증/증빙 이미지는 WebP로 변환하고 lazy loading, 명시적 width/height, decoding async를 적용해 발표장 네트워크가 불안정해도 빠르게 열리도록 구성했습니다.</p>
+    </article>
+  </section>
+
+  <footer>
+    실제 물리엔진/의료 판단이 아니라, 설계 전 위험을 빠르게 줄이는 규칙·확률 기반 사전 검토 도구입니다.
+  </footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
