@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nutronics Smart Pill Simulator</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -18,6 +19,8 @@
       <span class="pill online">System Online</span>
       <span class="pill">발표용 구조 시안</span>
       <span class="pill warn">의료 판단 아님</span>
+      <button id="sparkModeBtn" class="ghost" type="button">코덱스 스파크 모드</button>
+      <button id="sparkRunBtn" class="secondary" type="button">PPT 시퀀스 1회</button>
     </div>
     <figure class="hero-visual" aria-label="4통 카트리지와 가로 캡슐 토출 구조 발표용 시안">
       <svg viewBox="0 0 720 405" role="img">
@@ -140,6 +143,23 @@
         <span>Static Checks</span>
         <b>→</b>
         <span>validation_report.json</span>
+      </div>
+      <div class="slide-sync capture-frame" aria-label="PPT 동기화">
+        <div class="slide-sync-head">
+          <h3>PPT 24~28 시퀀스 동기화</h3>
+          <span id="slideBadge" class="pill online">슬라이드 대기</span>
+        </div>
+        <p id="slideNarrative" class="hero-note">원하는 슬라이드 버튼을 눌러 시뮬레이션 조건·상태를 즉시 맞추세요.</p>
+        <div class="slide-buttons" id="slideButtons" role="group" aria-label="PPT 슬라이드 동기화 버튼">
+          <button type="button" data-slide="24" class="ghost">24 AI Pipeline</button>
+          <button type="button" data-slide="25" class="ghost">25 Validation Harness</button>
+          <button type="button" data-slide="26" class="ghost">26 AI Simulator Loop</button>
+          <button type="button" data-slide="27" class="ghost">27 GitHub Evidence</button>
+          <button type="button" data-slide="28" class="ghost">28 Project OS</button>
+        </div>
+        <div class="slide-preview" id="slidePreview">
+          <img id="slidePreviewImage" src="assets/ppt-ai-pipeline.webp" width="960" height="540" alt="PPT 24 AI Pipeline 미리보기" loading="lazy" decoding="async" />
+        </div>
       </div>
     </section>
 

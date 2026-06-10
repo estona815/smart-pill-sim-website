@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-06-10T16:27:50.284Z",
+  "generatedAt": "2026-06-10T16:46:34.692Z",
   "dist": "/Users/hantaeheuk/Documents/Codex/2026-06-11/files-mentioned-by-the-user-nutronics/work/smart-pill-sim-website/dist",
-  "totalBytes": 510963,
-  "appJsBytes": 11207,
+  "totalBytes": 538304,
+  "appJsBytes": 27102,
   "appJsUnder100KB": true,
   "files": [
     {
@@ -34,6 +34,10 @@
       "bytes": 29778
     },
     {
+      "file": "app.js",
+      "bytes": 27102
+    },
+    {
       "file": "assets/ppt-ai-simulator-loop.webp",
       "bytes": 26906
     },
@@ -47,35 +51,31 @@
     },
     {
       "file": "index.html",
-      "bytes": 16855
-    },
-    {
-      "file": "app.js",
-      "bytes": 11207
+      "bytes": 18304
     },
     {
       "file": "styles.css",
-      "bytes": 9034
+      "bytes": 10063
+    },
+    {
+      "file": "app.js.gz",
+      "bytes": 8463
+    },
+    {
+      "file": "app.js.br",
+      "bytes": 7293
     },
     {
       "file": "index.html.gz",
-      "bytes": 5409
+      "bytes": 5765
+    },
+    {
+      "file": "index.html.br",
+      "bytes": 4794
     },
     {
       "file": "assets/ai-simulator-dashboard.svg",
       "bytes": 4466
-    },
-    {
-      "file": "index.html.br",
-      "bytes": 4460
-    },
-    {
-      "file": "app.js.gz",
-      "bytes": 4193
-    },
-    {
-      "file": "app.js.br",
-      "bytes": 3624
     },
     {
       "file": "assets/future-concept.svg",
@@ -87,11 +87,11 @@
     },
     {
       "file": "styles.css.gz",
-      "bytes": 2690
+      "bytes": 2869
     },
     {
       "file": "styles.css.br",
-      "bytes": 2323
+      "bytes": 2483
     }
   ]
 }

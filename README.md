@@ -9,6 +9,8 @@
 공개 웹사이트: https://estona815.github.io/smart-pill-sim-website/
 
 발표 캡처 모드: https://estona815.github.io/smart-pill-sim-website/?mode=presentation
+코덱스 스파크 로컬 모드: http://localhost:4173/?mode=spark
+PPT 연동 모드: http://localhost:4173/?mode=spark&slide=24 (24~28 가능)
 
 ## 현재 하드웨어 전제
 
@@ -149,3 +151,19 @@
 - 센서 브래킷 위치별 감지 안정성 비교
 - 전원 전압 강하 실측값 입력
 - 장기 반복 테스트 결과 입력 및 리포트 생성
+
+## 검수본/완성본 체크 결과 (2026-06-11)
+
+- 정적 사이트 검증: `scripts/validate-static-site.js` 통과
+- 정적 성능 점검: `scripts/perf-check.mjs` 통과
+  - app.js: 26.5 KB (100 KB 미만)
+  - CSS: 9.8 KB
+  - 이미지: 500 KB 초과 없음
+- 브라우저 런타임(1366/1920/390) 스크린샷 경로에서 콘솔 에러 없음 (404 favicon 요청 제거)
+- 배포 산출물: `dist/` 빌드 성공
+- 발표 최적 모드:
+  - `http://localhost:4173/?mode=presentation`
+  - `http://localhost:4173/?mode=spark&slide=24` ~ `...slide=28`
+  - `https://estona815.github.io/smart-pill-sim-website/`
+
+완성본 사용 시: `dist` 폴더를 그대로 GitHub Pages 정적 호스팅 루트로 업로드하면 된다.

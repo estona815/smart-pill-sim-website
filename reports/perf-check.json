@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T16:27:50.374Z",
+  "generatedAt": "2026-06-10T16:46:46.964Z",
   "checks": {
     "distExists": true,
     "appJsUnder100KB": true,
@@ -9,9 +9,9 @@
     "compressedAssetsPresent": true
   },
   "sizes": {
-    "html": 16855,
-    "css": 9034,
-    "appJs": 11207,
+    "html": 18304,
+    "css": 10063,
+    "appJs": 27102,
     "images": [
       {
         "file": "assets/ai-dashboard.webp",
