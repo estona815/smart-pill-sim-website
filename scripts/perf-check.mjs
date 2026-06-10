@@ -12,7 +12,7 @@ const css = fsSync.existsSync(path.join(dist, 'styles.css')) ? fsSync.statSync(p
 const html = fsSync.existsSync(path.join(dist, 'index.html')) ? fsSync.statSync(path.join(dist, 'index.html')).size : 0;
 const assetsDir = path.join(dist, 'assets');
 const images = fsSync.existsSync(assetsDir)
-  ? fsSync.readdirSync(assetsDir).filter(f => /\.(webp|avif|png|jpg)$/i.test(f)).map(f => ({ file: `assets/${f}`, bytes: fsSync.statSync(path.join(assetsDir, f)).size }))
+  ? fsSync.readdirSync(assetsDir).filter(f => /\.(svg|webp|avif|png|jpg)$/i.test(f)).map(f => ({ file: `assets/${f}`, bytes: fsSync.statSync(path.join(assetsDir, f)).size }))
   : [];
 const oversized = images.filter(i => i.bytes > 500 * 1024);
 const result = {

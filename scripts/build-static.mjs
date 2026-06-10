@@ -37,7 +37,6 @@ if (!analyzeOnly) {
   spawnSync('python3', [path.join(root, 'scripts/optimize-images.py')], { stdio: 'inherit' });
   await fs.rm(dist, { recursive: true, force: true });
   await fs.mkdir(path.join(dist, 'assets'), { recursive: true });
-  await fs.rm(path.join(root, 'assets'), { recursive: true, force: true });
   spawnSync('python3', [path.join(root, 'scripts/optimize-images.py')], { stdio: 'inherit' });
   let html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
   const css = minifyCss(await fs.readFile(path.join(root, 'styles.css'), 'utf8'));

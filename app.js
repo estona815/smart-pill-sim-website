@@ -16,7 +16,11 @@
 
   const canvas = document.getElementById('simCanvas');
   const ctx = canvas.getContext('2d');
-  const state = { wheelAngle: -25, last: null, rows: [], animating: false };
+  const state = { wheelAngle: -25, last: null, rows: [], animating: false, speed: 1.5 };
+  const speedButtons = [...document.querySelectorAll('.speed-btn')];
+  const stepItems = [...document.querySelectorAll('#stepRail [data-step]')];
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'presentation') document.body.classList.add('presentation-mode');
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
   function getConfig() {
@@ -88,6 +92,7 @@
     state.last = rows[rows.length - 1];
     updateMetrics(rows);
     drawScene(.85, state.last);
+    setStep(5);
   }
   function updateMetrics(rows) {
     const ok = rows.filter(r => r.status === 'success').length;
@@ -102,6 +107,19 @@
     document.getElementById('failureList').innerHTML = top.length
       ? top.map(([k, v]) => `<li>${k} · ${v}회</li>`).join('')
       : '<li>실패 없음</li>';
+  }
+  function setStep(index) {
+    for (const item of stepItems) {
+      item.classList.toggle('active', Number(item.dataset.step) <= index);
+    }
+  }
+  function stepFromProgress(progress) {
+    if (progress < .12) return 0;
+    if (progress < .38) return 1;
+    if (progress < .58) return 2;
+    if (progress < .78) return 3;
+    if (progress < .92) return 4;
+    return 5;
   }
   function drawCapsule(x, y, len, h, angle, fill = '#0f766e') {
     ctx.save();
@@ -124,6 +142,7 @@
   function drawScene(progress = 0, result) {
     const cfg = getConfig();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const activeStep = stepFromProgress(progress);
     ctx.fillStyle = '#f8fbfd';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -132,7 +151,7 @@
     ctx.fillText('Horizontal Capsule Dispense Simulation', 34, 48);
     ctx.fillStyle = '#64748b';
     ctx.font = '15px system-ui';
-    ctx.fillText('가로 캡슐 · 회전 슬롯 휠 · 배출구 · IR 감지 · validation_report.json', 34, 76);
+    ctx.fillText('발표용 시뮬레이션 · 규칙·확률 기반 사전 검토 · 실제 물리시험과 구분', 34, 76);
 
     const cx = 430, cy = 310, outer = 190, inner = 88;
     ctx.save();
@@ -161,9 +180,19 @@
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 3;
     ctx.strokeRect(385, 462, 100, 68);
-    const pillX = 430 + progress * 170;
-    drawCapsule(pillX, 498, 76, 26, 0, '#0f9f8f');
-    ctx.fillStyle = '#f59e0b';
+    const travel = progress < .58 ? 0 : clamp((progress - .58) / .38, 0, 1);
+    const pillX = 418 + travel * 185;
+    const pillY = 476 + Math.sin(travel * Math.PI) * 16 + travel * 22;
+    drawCapsule(pillX, pillY, 76, 26, 0, '#0f9f8f');
+    ctx.strokeStyle = activeStep >= 4 ? '#f59e0b' : 'rgba(245,158,11,.34)';
+    ctx.lineWidth = activeStep >= 4 ? 5 : 3;
+    ctx.beginPath();
+    ctx.setLineDash([9, 9]);
+    ctx.moveTo(518, 462);
+    ctx.lineTo(518, 530);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = activeStep >= 4 ? '#f59e0b' : '#fed7aa';
     ctx.beginPath(); ctx.arc(518, 498, 12, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#061b33';
     ctx.font = '800 14px system-ui';
@@ -187,6 +216,7 @@
       `outlet_width_mm: ${cfg.outletWidth}`,
       `common_gnd: ${cfg.commonGnd}`,
       `ir_sensor: ${cfg.dischargeSensor}`,
+      `speed: ${state.speed.toFixed(1)}x`,
       `result: ${result ? result.reason : 'ready'}`
     ];
     ctx.fillStyle = '#334155'; ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -199,13 +229,16 @@
     state.last = result;
     state.animating = true;
     const start = performance.now();
+    const duration = 1200 / state.speed;
     function frame(now) {
-      const p = clamp((now - start) / 900, 0, 1);
+      const p = clamp((now - start) / duration, 0, 1);
+      setStep(stepFromProgress(p));
       drawScene(p, result);
       if (p < 1) requestAnimationFrame(frame);
       else {
         state.animating = false;
         updateMetrics([result]);
+        setStep(5);
       }
     }
     requestAnimationFrame(frame);
@@ -248,7 +281,16 @@
     els.seed.value = 815;
     els.commonGnd.checked = true;
     els.dischargeSensor.checked = true;
+    setStep(0);
     drawScene(.2, null);
+  }
+  function setSpeed(speed) {
+    state.speed = speed;
+    for (const button of speedButtons) {
+      button.classList.toggle('active', Number(button.dataset.speed) === speed);
+    }
+    document.getElementById('modeBadge').textContent = `${speed.toFixed(1)}x Demo Ready`;
+    drawScene(.2, state.last);
   }
   document.getElementById('runOneBtn').addEventListener('click', animateOne);
   document.getElementById('runManyBtn').addEventListener('click', runMany);
@@ -257,6 +299,10 @@
   document.getElementById('downloadPngBtn').addEventListener('click', savePng);
   document.getElementById('loadExampleBtn').addEventListener('click', loadExample);
   document.getElementById('resetBtn').addEventListener('click', loadExample);
+  for (const button of speedButtons) {
+    button.addEventListener('click', () => setSpeed(Number(button.dataset.speed)));
+  }
   for (const id of fieldIds) els[id].addEventListener('input', () => drawScene(.2, state.last));
   loadExample();
+  setSpeed(1.5);
 })();

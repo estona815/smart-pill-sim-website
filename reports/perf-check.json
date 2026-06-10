@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T16:01:13.514Z",
+  "generatedAt": "2026-06-10T16:17:37.861Z",
   "checks": {
     "distExists": true,
     "appJsUnder100KB": true,
@@ -9,17 +9,29 @@
     "compressedAssetsPresent": true
   },
   "sizes": {
-    "html": 9368,
-    "css": 5056,
-    "appJs": 9551,
+    "html": 14346,
+    "css": 8413,
+    "appJs": 11207,
     "images": [
       {
         "file": "assets/ai-dashboard.webp",
         "bytes": 51834
       },
       {
+        "file": "assets/ai-simulator-dashboard.svg",
+        "bytes": 4466
+      },
+      {
+        "file": "assets/future-concept.svg",
+        "bytes": 3389
+      },
+      {
         "file": "assets/product-render.webp",
         "bytes": 74478
+      },
+      {
+        "file": "assets/project-os-mockup.svg",
+        "bytes": 3331
       },
       {
         "file": "assets/project-os.webp",
