@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nutronics Simulator Lab</title>
+    <meta
+      name="description"
+      content="2026년 7월 2일 발표용 뉴트로닉스 실시간 정량 토출 시뮬레이터"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%230f2140' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%230f2140' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./simulator.css" />
+  </head>
+  <body>
+    <div class="sim-page">
+      <header class="sim-topbar">
+        <a class="sim-brand" href="./index.html" aria-label="메인 페이지로 이동">
+          <span class="sim-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <path
+                d="M32 4 55 17.5v29L32 60 9 46.5v-29Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                d="M22 44V20l20 24V20"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="5"
+              />
+            </svg>
+          </span>
+          <span class="sim-brand-copy">
+            <strong>Nutronics Simulator Lab</strong>
+            <small>2026.07.02 발표용 라이브 데모</small>
+          </span>
+        </a>
+
+        <div class="sim-clock">
+          <span id="sim-clock-date">2026-07-02</span>
+          <strong id="sim-clock-time">10:24:36</strong>
+          <span class="sim-live-badge">LIVE</span>
+        </div>
+
+        <div class="sim-toolbar">
+          <button id="presentation-mode" class="toolbar-button" type="button">
+            발표 모드
+          </button>
+          <a class="toolbar-link" href="./index.html">메인 페이지</a>
+        </div>
+      </header>
+
+      <main class="sim-layout">
+        <aside class="sim-sidebar">
+          <section class="side-panel">
+            <h2>시나리오 선택</h2>
+            <label class="field">
+              <span class="field-label">발표 시나리오</span>
+              <select id="scenario-select"></select>
+            </label>
+          </section>
+
+          <section class="side-panel">
+            <h2>배출 설정</h2>
+            <div class="qty-control">
+              <span class="field-label">배출 수량</span>
+              <div class="qty-box">
+                <button id="qty-minus" type="button" aria-label="수량 감소">−</button>
+                <strong id="manual-qty">1</strong>
+                <button id="qty-plus" type="button" aria-label="수량 증가">＋</button>
+              </div>
+            </div>
+
+            <div class="capsule-picker">
+              <span class="field-label">대상 캡슐</span>
+              <div id="capsule-selector" class="capsule-selector"></div>
+            </div>
+          </section>
+
+          <section class="side-panel">
+            <h2>실행 제어</h2>
+            <div class="action-stack">
+              <button id="run-cycle" class="action-button action-button-primary" type="button">
+                자동 사이클 실행
+              </button>
+              <button id="next-dispense" class="action-button" type="button">
+                다음 배출
+              </button>
+              <button id="jam-test" class="action-button action-button-warning" type="button">
+                Jam Test
+              </button>
+              <button id="reset-sim" class="action-button" type="button">Reset</button>
+            </div>
+          </section>
+
+          <section class="side-panel">
+            <h2>시스템 연결 상태</h2>
+            <ul id="connection-list" class="connection-list"></ul>
+          </section>
+        </aside>
+
+        <section class="sim-center">
+          <div class="center-heading">
+            <div>
+              <p class="eyebrow">Rotor Simulation</p>
+              <h1>실시간 정량 토출 시뮬레이터</h1>
+              <p>
+                발표용 데모 기준으로 로터 정렬, 센서 감지, 배출 이벤트, SQLite
+                저장 흐름을 한 화면에서 보여줍니다.
+              </p>
+            </div>
+            <div id="channel-legend" class="channel-legend"></div>
+          </div>
+
+          <article class="rotor-panel">
+            <div class="rotor-workbench">
+              <div class="sensor-column">
+                <div class="sensor-card">
+                  <div class="sensor-card-head">
+                    <h2>IR 센서</h2>
+                    <span id="ir-status-badge" class="status-pill">정상</span>
+                  </div>
+                  <img
+                    src="./assets/source-media/image9.png"
+                    alt="IR 센서 및 GPIO 연결 참고 이미지"
+                  />
+                  <p id="ir-status-text">IR 감지 상태: 대기</p>
+                </div>
+
+                <div class="sensor-card">
+                  <div class="sensor-card-head">
+                    <h2>Hall 위치</h2>
+                    <span id="hall-status-badge" class="status-pill">정상</span>
+                  </div>
+                  <div class="sensor-illustration hall-illustration"></div>
+                  <p id="hall-status-text">현재 위치: CH1 (0°)</p>
+                </div>
+
+                <div class="sensor-card">
+                  <div class="sensor-card-head">
+                    <h2>Power</h2>
+                    <span id="power-status-badge" class="status-pill">정상</span>
+                  </div>
+                  <dl class="power-metrics">
+                    <div>
+                      <dt>입력 전압</dt>
+                      <dd id="power-voltage">5.08 V</dd>
+                    </div>
+                    <div>
+                      <dt>전체 소비</dt>
+                      <dd id="power-current">1.32 A</dd>
+                    </div>
+                    <div>
+                      <dt>여유 전력</dt>
+                      <dd id="power-headroom">3.68 A</dd>
+                    </div>
+                  </dl>
+                  <div class="power-bar">
+                    <span id="power-bar-fill"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stage-panel">
+                <div class="rotor-stage">
+                  <div class="stage-grid"></div>
+                  <div class="stage-pointer stage-pointer-top"></div>
+                  <div class="stage-pointer stage-pointer-right"></div>
+
+                  <div class="rotor-shell">
+                    <div id="rotor-disc" class="rotor-disc">
+                      <div class="rotor-slot rotor-slot-top" data-channel="CH0">
+                        <div class="slot-inner">
+                          <div class="slot-pills"></div>
+                          <strong class="slot-code"></strong>
+                          <span class="slot-name"></span>
+                          <small class="slot-stock"></small>
+                        </div>
+                      </div>
+                      <div class="rotor-slot rotor-slot-right" data-channel="CH1">
+                        <div class="slot-inner">
+                          <div class="slot-pills"></div>
+                          <strong class="slot-code"></strong>
+                          <span class="slot-name"></span>
+                          <small class="slot-stock"></small>
+                        </div>
+                      </div>
+                      <div class="rotor-slot rotor-slot-bottom" data-channel="CH2">
+                        <div class="slot-inner">
+                          <div class="slot-pills"></div>
+                          <strong class="slot-code"></strong>
+                          <span class="slot-name"></span>
+                          <small class="slot-stock"></small>
+                        </div>
+                      </div>
+                      <div class="rotor-slot rotor-slot-left" data-channel="CH3">
+                        <div class="slot-inner">
+                          <div class="slot-pills"></div>
+                          <strong class="slot-code"></strong>
+                          <span class="slot-name"></span>
+                          <small class="slot-stock"></small>
+                        </div>
+                      </div>
+                      <div class="rotor-hub"></div>
+                    </div>
+                  </div>
+
+                  <div class="chute-assembly">
+                    <div class="ir-node">
+                      <strong>IR 센서</strong>
+                      <span id="ir-beam-text">빔 대기</span>
+                    </div>
+                    <div id="beam-line" class="beam-line"></div>
+                    <div class="drop-chute"></div>
+                    <div class="catch-cup"></div>
+                    <div id="capsule-flight-layer" class="capsule-flight-layer"></div>
+                  </div>
+                </div>
+
+                <div class="telemetry-row">
+                  <article class="telemetry-card">
+                    <span>회전 각도</span>
+                    <strong id="telemetry-angle">0°</strong>
+                  </article>
+                  <article class="telemetry-card">
+                    <span>목표 위치</span>
+                    <strong id="telemetry-target">CH1</strong>
+                  </article>
+                  <article class="telemetry-card">
+                    <span>서보 상태</span>
+                    <strong id="telemetry-servo">대기</strong>
+                  </article>
+                  <article class="telemetry-card">
+                    <span>배출 상태</span>
+                    <strong id="telemetry-dispense">대기</strong>
+                  </article>
+                  <article class="telemetry-card">
+                    <span>총 배출 수</span>
+                    <strong id="telemetry-total">0</strong>
+                  </article>
+                  <article class="telemetry-card">
+                    <span>오류 상태</span>
+                    <strong id="telemetry-fault">없음</strong>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <div class="bottom-grid">
+            <article class="bottom-card">
+              <div class="bottom-card-head">
+                <h2>배출 큐 (스케줄)</h2>
+                <span id="queue-summary">대기 0건</span>
+              </div>
+              <table class="queue-table">
+                <thead>
+                  <tr>
+                    <th>순서</th>
+                    <th>채널</th>
+                    <th>영양제</th>
+                    <th>수량</th>
+                    <th>예상 시간</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody id="queue-body"></tbody>
+              </table>
+            </article>
+
+            <article class="bottom-card">
+              <div class="bottom-card-head">
+                <h2>시나리오 정보</h2>
+              </div>
+              <strong id="scenario-name" class="scenario-name">기본 발표 시나리오</strong>
+              <p id="scenario-description" class="scenario-description"></p>
+              <ul id="scenario-notes" class="scenario-notes"></ul>
+            </article>
+
+            <article class="bottom-card">
+              <div class="bottom-card-head">
+                <h2>회로 미리보기</h2>
+              </div>
+              <img
+                class="wiring-preview"
+                src="./assets/source-media/image8.png"
+                alt="Raspberry Pi 5와 PCA9685 연결 배선도"
+              />
+            </article>
+          </div>
+        </section>
+
+        <aside class="sim-right">
+          <article class="right-card product-card">
+            <div class="right-card-head">
+              <h2>제품 미리보기</h2>
+            </div>
+            <div class="product-grid">
+              <img
+                src="./assets/source-media/image23.png"
+                alt="뉴트로닉스 영양제 자동 디스펜서 기대 완성 이미지"
+              />
+              <dl class="spec-list">
+                <div>
+                  <dt>모델</dt>
+                  <dd>Nutronics v1.0</dd>
+                </div>
+                <div>
+                  <dt>제어 보드</dt>
+                  <dd>Raspberry Pi 5</dd>
+                </div>
+                <div>
+                  <dt>모터 드라이버</dt>
+                  <dd>PCA9685 (16ch)</dd>
+                </div>
+                <div>
+                  <dt>서보 모터</dt>
+                  <dd>MG996R x 4</dd>
+                </div>
+                <div>
+                  <dt>IR 센서</dt>
+                  <dd>SEN0503</dd>
+                </div>
+                <div>
+                  <dt>데이터베이스</dt>
+                  <dd>SQLite</dd>
+                </div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="right-card validation-card">
+            <div class="right-card-head">
+              <h2>Validation Log</h2>
+              <span id="validation-badge" class="validation-badge">READY</span>
+            </div>
+            <div class="validation-layout">
+              <ul class="validation-checks">
+                <li>
+                  <span>정확도</span>
+                  <strong id="check-accuracy">대기</strong>
+                </li>
+                <li>
+                  <span>배출 확인</span>
+                  <strong id="check-dispense">대기</strong>
+                </li>
+                <li>
+                  <span>IR 감지</span>
+                  <strong id="check-ir">대기</strong>
+                </li>
+                <li>
+                  <span>기록 저장</span>
+                  <strong id="check-db">대기</strong>
+                </li>
+              </ul>
+
+              <div class="validation-summary">
+                <div id="validation-icon" class="validation-icon">✓</div>
+                <div>
+                  <strong id="validation-title">준비 완료</strong>
+                  <p id="validation-message">
+                    시뮬레이션 대기 중입니다. 자동 사이클 실행 또는 다음 배출을
+                    눌러 시작하세요.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="right-card log-card">
+            <div class="right-card-head">
+              <h2>실시간 이벤트 로그</h2>
+              <span id="log-count">0 events</span>
+            </div>
+            <div id="event-log" class="event-log"></div>
+          </article>
+        </aside>
+      </main>
+    </div>
+
+    <script src="./simulator.js"></script>
+  </body>
+</html>
