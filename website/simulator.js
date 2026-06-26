@@ -1,18 +1,68 @@
 const channelConfig = [
-  { id: "CH0", name: "비타민", color: "#d6a232", accent: "#f4c44a", targetAngle: 90 },
-  { id: "CH1", name: "미네랄", color: "#e7edf4", accent: "#ffffff", targetAngle: 0 },
-  { id: "CH2", name: "오메가3", color: "#e4b33e", accent: "#ffd86f", targetAngle: 270 },
-  { id: "CH3", name: "프로바이오틱", color: "#e8d8bb", accent: "#fff0db", targetAngle: 180 },
+  {
+    id: "CH0",
+    name: "비타민",
+    color: "#d6a232",
+    accent: "#f4c44a",
+    targetAngle: 120,
+    home: "0° 장전",
+  },
+  {
+    id: "CH1",
+    name: "미네랄",
+    color: "#e7edf4",
+    accent: "#ffffff",
+    targetAngle: 120,
+    home: "30° 분리",
+  },
+  {
+    id: "CH2",
+    name: "오메가3",
+    color: "#e4b33e",
+    accent: "#ffd86f",
+    targetAngle: 120,
+    home: "120° 이송",
+  },
+  {
+    id: "CH3",
+    name: "프로바이오틱",
+    color: "#e8d8bb",
+    accent: "#fff0db",
+    targetAngle: 120,
+    home: "가로 슈트",
+  },
+];
+
+const mechanismPhases = [
+  {
+    limit: 24,
+    key: "load",
+    label: "0° 장전",
+    status: "포켓에 캡슐 1정 진입",
+  },
+  {
+    limit: 80,
+    key: "separate",
+    label: "30° 분리",
+    status: "후속 캡슐과 물리적으로 격리",
+  },
+  {
+    limit: 121,
+    key: "transfer",
+    label: "120° 이송",
+    status: "가로 토출 슈트와 정렬",
+  },
 ];
 
 const scenarios = {
   presentation_ready: {
     label: "기본 발표 시나리오",
     description:
-      "7월 2일 발표 현장에서 그대로 보여주기 좋은 기본 루프입니다. 각 채널을 1회씩 순서대로 배출하며 로터 정렬, IR 감지, SQLite 저장 흐름을 설명할 수 있습니다.",
+      "7월 2일 발표 현장에서 그대로 보여주기 좋은 기본 루프입니다. 각 채널을 1회씩 순서대로 배출하며 0° 장전, 30° 분리, 120° 이송, IR 감지, SQLite 저장 흐름을 설명할 수 있습니다.",
     notes: [
       "발표용 대표 시나리오",
-      "4채널 전체를 한 번씩 순회",
+      "PPT 기준 3단 디스크 이송 흐름",
+      "사선 램프 → 가로 슈트 토출 강조",
       "IR / Hall / SQLite 흐름 설명에 적합",
     ],
     baseStock: { CH0: 5, CH1: 4, CH2: 5, CH3: 4 },
@@ -135,7 +185,7 @@ const state = {
   faultState: "없음",
   irStatus: "대기",
   hallState: "정상",
-  hallStatus: "현재 위치: CH1 (0°)",
+  hallStatus: "현재 위치: 0° 장전 - 캡슐 1정 포켓 진입",
   validationStatus: "READY",
   validationTitle: "준비 완료",
   validationMessage:
@@ -234,7 +284,7 @@ function resetScenario(nextScenarioId = state.scenarioId) {
   state.faultState = "없음";
   state.irStatus = "대기";
   state.hallState = "정상";
-  state.hallStatus = "현재 위치: CH1 (0°)";
+  state.hallStatus = "현재 위치: 0° 장전 - 캡슐 1정 포켓 진입";
   state.validationStatus = "READY";
   state.validationTitle = "준비 완료";
   state.validationMessage =
@@ -352,14 +402,17 @@ function buildPills(stock, channel) {
 }
 
 function renderRotor() {
-  refs.rotorDisc.style.transform = `translate(-50%, -50%) rotate(${state.currentAngle}deg)`;
+  const mechanismAngle = clampMechanismAngle(state.currentAngle);
+  const phase = getMechanismPhase(mechanismAngle);
+  refs.rotorDisc.style.setProperty("--gate-angle", `${mechanismAngle}deg`);
+  refs.rotorDisc.dataset.phase = phase.key;
 
   refs.rotorDisc.querySelectorAll(".rotor-slot").forEach((slot) => {
     const channelId = slot.dataset.channel;
     const channel = getChannel(channelId);
     const inner = slot.querySelector(".slot-inner");
     const isTarget = channelId === state.manualChannel;
-    inner.style.transform = `rotate(${-state.currentAngle}deg)`;
+    inner.style.transform = "";
     slot.classList.toggle("is-target", isTarget);
     slot.querySelector(".slot-pills").innerHTML = buildPills(channel.stock, channel);
     slot.querySelector(".slot-code").textContent = channel.id;
@@ -408,8 +461,9 @@ function renderScenarioInfo() {
 }
 
 function renderTelemetry() {
+  const phase = getMechanismPhase(state.currentAngle);
   refs.manualQty.textContent = String(state.manualQuantity);
-  refs.telemetryAngle.textContent = `${Math.round(normalizeAngle(state.currentAngle))}°`;
+  refs.telemetryAngle.textContent = `${Math.round(clampMechanismAngle(state.currentAngle))}° · ${phase.label.split(" ")[1]}`;
   refs.telemetryTarget.textContent = `${state.manualChannel} (${getChannel(state.manualChannel).name})`;
   refs.telemetryServo.textContent = state.servoState;
   refs.telemetryDispense.textContent = state.dispenseState;
@@ -491,6 +545,18 @@ function normalizeAngle(angle) {
   return ((angle % 360) + 360) % 360;
 }
 
+function clampMechanismAngle(angle) {
+  return Math.max(0, Math.min(120, angle));
+}
+
+function getMechanismPhase(angle) {
+  const clampedAngle = clampMechanismAngle(angle);
+  return (
+    mechanismPhases.find((phase) => clampedAngle <= phase.limit) ??
+    mechanismPhases[mechanismPhases.length - 1]
+  );
+}
+
 function shortestAngleDelta(from, to) {
   const normalizedFrom = normalizeAngle(from);
   const normalizedTo = normalizeAngle(to);
@@ -503,14 +569,14 @@ function shortestAngleDelta(from, to) {
 function animateRotor(targetAngle) {
   return new Promise((resolve) => {
     const startAngle = state.currentAngle;
-    const delta = shortestAngleDelta(startAngle, targetAngle);
-    const duration = 900;
+    const delta = clampMechanismAngle(targetAngle) - startAngle;
+    const duration = 1040;
     const start = performance.now();
 
-    state.servoState = "회전 중";
-    state.dispenseState = "정렬 중";
+    state.servoState = "디스크 이송 중";
+    state.dispenseState = "0° 장전";
     state.hallState = "탐색";
-    state.hallStatus = `목표 위치 ${state.manualChannel} (${targetAngle}°) 정렬 중`;
+    state.hallStatus = "0° 장전: 캡슐 1정이 포켓에 진입";
     renderTelemetry();
     renderSensors();
 
@@ -518,15 +584,20 @@ function animateRotor(targetAngle) {
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       state.currentAngle = startAngle + delta * eased;
+      const phase = getMechanismPhase(state.currentAngle);
+      state.dispenseState = phase.label;
+      state.hallStatus = `${phase.label}: ${phase.status}`;
       renderRotor();
       renderTelemetry();
+      renderSensors();
       if (progress < 1) {
         requestAnimationFrame(frame);
       } else {
-        state.currentAngle = targetAngle;
-        state.servoState = "정렬 완료";
+        state.currentAngle = clampMechanismAngle(targetAngle);
+        state.servoState = "120° 정렬 완료";
+        state.dispenseState = "가로 슈트 대기";
         state.hallState = "정상";
-        state.hallStatus = `현재 위치: ${state.manualChannel} (${targetAngle}°)`;
+        state.hallStatus = "현재 위치: 120° 이송 - 가로 토출 슈트 정렬 완료";
         renderRotor();
         renderTelemetry();
         renderSensors();
@@ -593,11 +664,12 @@ async function runCycle(item, options = {}) {
 
   state.manualChannel = item.channel;
   state.manualQuantity = item.quantity;
+  state.currentAngle = 0;
   state.targetAngle = getChannelConfig(item.channel).targetAngle;
   state.faultState = "없음";
   state.validationStatus = "CHECK";
   state.validationTitle = "검증 진행 중";
-  state.validationMessage = `${channel.name} ${item.quantity}정 배출 루프를 실행하고 있습니다.`;
+  state.validationMessage = `${channel.name} ${item.quantity}정이 0° 장전, 30° 분리, 120° 이송 순서로 배출됩니다.`;
   state.validationChecks = {
     accuracy: "진행 중",
     dispense: "대기",
@@ -607,11 +679,11 @@ async function runCycle(item, options = {}) {
   if (queueItem) updateQueueStatus(queueItem.id, "진행");
 
   addLog("SYSTEM", `${channel.name} ${item.quantity}정 자동 사이클 시작`);
-  addLog("SERVO", `목표 각도 ${state.targetAngle}° → ${item.channel}`);
+  addLog("SERVO", `PPT 기준 3단 디스크: 0° 장전 → 30° 분리 → ${state.targetAngle}° 이송`);
   renderAll();
 
   await animateRotor(state.targetAngle);
-  addLog("HALL", `위치 감지: ${item.channel} (${state.targetAngle}°)`);
+  addLog("HALL", `위치 감지: ${item.channel} 캡슐이 가로 토출 슈트와 정렬`);
 
   if (shouldJam(attempt, isRetry)) {
     state.servoState = "대기";
@@ -665,7 +737,7 @@ async function runCycle(item, options = {}) {
   state.validationTitle = "PASS";
   state.validationMessage = "모든 검증을 통과했습니다.";
   state.validationChecks = {
-    accuracy: "100%",
+    accuracy: "120° 정렬",
     dispense: "성공",
     ir: "성공",
     db: "성공",

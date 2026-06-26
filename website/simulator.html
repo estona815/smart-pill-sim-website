@@ -12,7 +12,7 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%230f2140' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%230f2140' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./simulator.css" />
+    <link rel="stylesheet" href="./simulator.css?v=horizontal-transfer-120c" />
   </head>
   <body>
     <div class="sim-page">
@@ -108,11 +108,11 @@
         <section class="sim-center">
           <div class="center-heading">
             <div>
-              <p class="eyebrow">Rotor Simulation</p>
-              <h1>실시간 정량 토출 시뮬레이터</h1>
+              <p class="eyebrow">V3.0 Transfer Digital Twin</p>
+              <h1>가로 내부 토출 시뮬레이터</h1>
               <p>
-                발표용 데모 기준으로 로터 정렬, 센서 감지, 배출 이벤트, SQLite
-                저장 흐름을 한 화면에서 보여줍니다.
+                PPT 설계 기준의 3단 디스크, 내부 사선 낙하 램프, 우측 가로
+                토출 슈트, IR 감지, SQLite 저장 흐름을 한 화면에서 보여줍니다.
               </p>
             </div>
             <div id="channel-legend" class="channel-legend"></div>
@@ -175,7 +175,22 @@
 
                   <div class="rotor-shell">
                     <div id="rotor-disc" class="rotor-disc">
-                      <div class="rotor-slot rotor-slot-top" data-channel="CH0">
+                      <div class="disc-depth-shadow"></div>
+                      <div class="disc-rim"></div>
+                      <div class="disc-cutaway"></div>
+                      <div class="rotor-track-ring"></div>
+                      <div class="rotor-face-label">0° LOAD · 30° SEPARATE · 120° TRANSFER</div>
+                      <div class="transfer-ramp">
+                        <span>V-GROOVE 60°</span>
+                      </div>
+                      <div class="outlet-bridge">
+                        <span>HORIZONTAL OUTLET</span>
+                      </div>
+                      <div class="outlet-bore"></div>
+                      <div class="phase-marker phase-load">0° 장전</div>
+                      <div class="phase-marker phase-separate">30° 분리</div>
+                      <div class="phase-marker phase-transfer">120° 토출</div>
+                      <div class="rotor-slot rotor-slot-load" data-channel="CH0">
                         <div class="slot-inner">
                           <div class="slot-pills"></div>
                           <strong class="slot-code"></strong>
@@ -183,7 +198,7 @@
                           <small class="slot-stock"></small>
                         </div>
                       </div>
-                      <div class="rotor-slot rotor-slot-right" data-channel="CH1">
+                      <div class="rotor-slot rotor-slot-separate" data-channel="CH1">
                         <div class="slot-inner">
                           <div class="slot-pills"></div>
                           <strong class="slot-code"></strong>
@@ -191,7 +206,7 @@
                           <small class="slot-stock"></small>
                         </div>
                       </div>
-                      <div class="rotor-slot rotor-slot-bottom" data-channel="CH2">
+                      <div class="rotor-slot rotor-slot-buffer" data-channel="CH2">
                         <div class="slot-inner">
                           <div class="slot-pills"></div>
                           <strong class="slot-code"></strong>
@@ -199,7 +214,7 @@
                           <small class="slot-stock"></small>
                         </div>
                       </div>
-                      <div class="rotor-slot rotor-slot-left" data-channel="CH3">
+                      <div class="rotor-slot rotor-slot-transfer" data-channel="CH3">
                         <div class="slot-inner">
                           <div class="slot-pills"></div>
                           <strong class="slot-code"></strong>
@@ -216,6 +231,9 @@
                       <strong>IR 센서</strong>
                       <span id="ir-beam-text">빔 대기</span>
                     </div>
+                    <div class="gate-housing">
+                      <span>SEN0503</span>
+                    </div>
                     <div id="beam-line" class="beam-line"></div>
                     <div class="drop-chute"></div>
                     <div class="catch-cup"></div>
@@ -225,7 +243,7 @@
 
                 <div class="telemetry-row">
                   <article class="telemetry-card">
-                    <span>회전 각도</span>
+                    <span>디스크 위상</span>
                     <strong id="telemetry-angle">0°</strong>
                   </article>
                   <article class="telemetry-card">
@@ -324,6 +342,10 @@
                   <dd>MG996R x 4</dd>
                 </div>
                 <div>
+                  <dt>토출 구조</dt>
+                  <dd>3단 디스크 + 가로 슈트</dd>
+                </div>
+                <div>
                   <dt>IR 센서</dt>
                   <dd>SEN0503</dd>
                 </div>
@@ -384,6 +406,6 @@
       </main>
     </div>
 
-    <script src="./simulator.js"></script>
+    <script src="./simulator.js?v=horizontal-transfer-120c"></script>
   </body>
 </html>
