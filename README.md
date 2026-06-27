@@ -67,6 +67,9 @@ python3 -m http.server 4173
 
 ```text
 index.html
+assets/
+app.js
+styles.css
 website/
   index.html
   simulator.html
@@ -75,15 +78,15 @@ website/
   script.js
   simulator.js
   assets/
-app/
-tests/
-tools/
+scripts/
+dist/
 ```
 
+- `index.html`: GitHub Pages 루트 진입 파일
+- `assets/`, `app.js`, `styles.css`: 루트 랜딩 페이지 및 정적 자산
 - `website/`: 발표용 웹사이트와 시뮬레이터
 - `website/assets/`: 렌더, 회로도, 테스트 사진, QR 코드, 컨셉 이미지
-- `app/`: 문서 자동화 실험용 Python 유틸리티
-- `tests/`: Python 유틸리티 테스트
+- `scripts/`, `dist/`: 배포 및 빌드 관련 보조 파일
 
 ## 향후 개선점
 
@@ -95,5 +98,5 @@ tools/
 
 ## 참고
 
-이 저장소에는 발표 사이트 외에도 제출 문서 자동화를 위한 Python 유틸리티가 함께 들어 있습니다.
 이번 리디자인 작업의 중심은 `website/` 아래 발표 사이트와 시뮬레이터입니다.
+공개 URL 유지와 GitHub Pages 상대경로 호환을 위해 루트 `index.html`과 `website/` 경로를 함께 유지합니다.
