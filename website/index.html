@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nutronics | July 2 Presentation</title>
+    <title>Nutronics | 4인 팀 스마트 영양제 디스펜서 발표</title>
     <meta
       name="description"
-      content="2026년 7월 2일 발표 기준으로 재구성한 뉴트로닉스 개인 맞춤형 영양제 자동 분배 시스템 웹페이지"
+      content="4명이 역할을 나누어 설계·제작·테스트한 스마트 영양제 디스펜서 팀 프로젝트 발표용 웹사이트"
     />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%230f2140' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%230f2140' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%230c1f3d' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%230c1f3d' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -39,7 +39,7 @@
             </span>
             <span class="brand-copy">
               <strong>Nutronics</strong>
-              <small>융합프로젝트 1조</small>
+              <small>Smart Supplement Dispenser</small>
             </span>
           </a>
 
@@ -53,15 +53,15 @@
           </button>
 
           <nav id="site-nav" class="site-nav" aria-label="주요 탐색">
-            <a href="#overview">프로젝트 소개</a>
-            <a href="#readiness">발표 준비</a>
+            <a href="#team">팀 역할</a>
+            <a href="#solution">구조 설명</a>
+            <a href="#evidence">제작 증빙</a>
+            <a href="#timeline">제작 과정</a>
+            <a href="#tech">기술 구조</a>
             <a href="#simulator">시뮬레이터</a>
-            <a href="#proof">시연 증빙</a>
-            <a href="#execution">실행 과정</a>
-            <a href="#links">발표 링크</a>
           </nav>
 
-          <a class="nav-cta" href="./simulator.html">시뮬레이터 실행</a>
+          <a class="nav-cta" href="./simulator.html">시뮬레이터 보기</a>
         </div>
       </header>
 
@@ -69,477 +69,517 @@
         <section id="overview" class="hero-section">
           <div class="shell hero-grid">
             <div class="hero-copy">
-              <div class="hero-meta">
-                <span class="meta-pill">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M7 2v4M17 2v4M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.8"
-                    />
-                  </svg>
-                  2026.07.02 발표 기준
-                </span>
-                <span class="meta-copy">교수 발표용 데모 웹페이지</span>
-              </div>
-
-              <h1>Nutronics</h1>
-              <p class="hero-subtitle">
-                One Capsule at a Time
+              <h1>4명이 설계·제작한 스마트 영양제 디스펜서</h1>
+              <p class="hero-lead">
+                3단 디스크 구조와 사선 램프, 가로 원통형 토출구를 기반으로 한 자동 복용
+                보조 장치입니다.
               </p>
               <p class="hero-body">
-                Raspberry Pi 5 기반 개인 맞춤형 영양제 자동 분배 시스템입니다.
-                3단 디스크와 가로 내부 토출 구조로 영양제를 1알씩 배출하고, IR 센서와 SQLite
-                이력으로 결과를 확인하는 과정을 발표 현장에서 바로 보여줄 수
-                있도록 구성했습니다.
+                이 프로젝트는 단순 알림 앱이 아니라, 정해진 시간에 실제 캡슐 배출까지
+                연결하는 학생 팀 프로젝트입니다. 기구 설계, 회로·전원, 제어·DB,
+                웹·문서·발표 파트를 4명이 분담해 설계부터 제작, 테스트, 시연 준비까지
+                함께 진행했습니다.
               </p>
 
-              <dl class="hero-proof-line" aria-label="발표 핵심 지표">
-                <div>
-                  <dt>1정</dt>
-                  <dd>정량 토출</dd>
-                </div>
-                <div>
-                  <dt>4CH</dt>
-                  <dd>로터 제어</dd>
-                </div>
-                <div>
-                  <dt>PASS</dt>
-                  <dd>센서 검증</dd>
-                </div>
-              </dl>
-
               <div class="hero-actions">
-                <a class="button button-primary" href="#proof">토출 시연 보기</a>
-                <a class="button button-secondary" href="./simulator.html"
-                  >시뮬레이터 실행</a
-                >
+                <a class="button button-primary" href="./simulator.html">시뮬레이터 보기</a>
+                <a class="button button-secondary" href="#timeline">제작 과정 보기</a>
+                <a class="button button-secondary" href="#team">팀 역할 보기</a>
               </div>
+
+              <ul class="hero-metrics" aria-label="프로젝트 핵심 요약">
+                <li>
+                  <strong>4명</strong>
+                  <span>기구·회로·제어·웹 분업 제작</span>
+                </li>
+                <li>
+                  <strong>3단</strong>
+                  <span>디스크 기반 캡슐 분리 구조</span>
+                </li>
+                <li>
+                  <strong>1 흐름</strong>
+                  <span>장전 → 램프 이동 → 수평 토출</span>
+                </li>
+                <li>
+                  <strong>LIVE</strong>
+                  <span>정상·걸림·재시도 발표 시연</span>
+                </li>
+              </ul>
             </div>
 
             <div class="hero-visual">
-              <div class="hero-card">
+              <figure class="product-frame">
                 <img
                   src="./assets/source-media/image23.png"
-                  alt="뉴트로닉스 영양제 자동 디스펜서 기대 완성 형태"
+                  alt="스마트 영양제 디스펜서 기대 완성 렌더"
                 />
-                <aside class="module-panel">
-                  <h2>핵심 모듈</h2>
-                  <ul>
-                    <li>
-                      <strong>Raspberry Pi 5</strong>
-                      <span>메인 컨트롤 &amp; 통신</span>
-                    </li>
-                    <li>
-                      <strong>PCA9685</strong>
-                      <span>16채널 PWM 서보 제어</span>
-                    </li>
-                    <li>
-                      <strong>IR 센서</strong>
-                      <span>실제 토출 여부 감지</span>
-                    </li>
-                    <li>
-                      <strong>SQLite</strong>
-                      <span>복약 이력 저장</span>
-                    </li>
-                  </ul>
-                </aside>
-              </div>
+              </figure>
+
+              <aside class="hero-panel">
+                <h2>발표에서 바로 설명할 수 있는 핵심</h2>
+                <ul>
+                  <li>
+                    <strong>3단 디스크 구조</strong>
+                    <span>캡슐을 한 알씩 분리해 사선 램프로 연결</span>
+                  </li>
+                  <li>
+                    <strong>회로·전원 구성</strong>
+                    <span>Raspberry Pi 5, PCA9685, 센서, 전원 분배 구조</span>
+                  </li>
+                  <li>
+                    <strong>제어·DB 흐름</strong>
+                    <span>복용 스케줄, 상태 기록, 오류 처리 로직 정리</span>
+                  </li>
+                  <li>
+                    <strong>발표용 시뮬레이터</strong>
+                    <span>정상 배출과 걸림 복구 흐름을 현장에서 직접 시연</span>
+                  </li>
+                </ul>
+              </aside>
             </div>
           </div>
+        </section>
 
-          <div class="shell evidence-rail">
-            <article class="rail-item">
-              <span class="rail-icon">◎</span>
-              <div>
-                <h2>1알 정량 토출</h2>
-                <p>0° 장전 · 30° 분리 · 120° 이송 구조로 정확한 배출</p>
-              </div>
+        <section class="proof-strip-section">
+          <div class="shell proof-strip">
+            <article>
+              <strong>문제 정의</strong>
+              <p>복용 시간을 놓치지 않으면서 여러 종류의 캡슐을 실제로 배출해야 했습니다.</p>
             </article>
-            <article class="rail-item">
-              <span class="rail-icon">✓</span>
-              <div>
-                <h2>이중 검증 구조</h2>
-                <p>IR 센서 감지와 Hall 예비 확장 기준 검증</p>
-              </div>
+            <article>
+              <strong>핵심 구조</strong>
+              <p>3단 디스크, 사선 램프, 가로 원통형 토출구로 캡슐 경로를 고정했습니다.</p>
             </article>
-            <article class="rail-item">
-              <span class="rail-icon">▣</span>
-              <div>
-                <h2>이력 자동 기록</h2>
-                <p>SQLite 로컬 DB로 결과 저장과 추적</p>
-              </div>
+            <article>
+              <strong>검증 방식</strong>
+              <p>하드웨어 제작 사진, 회로도, UI 화면, 배출 테스트, 웹 시뮬레이터로 증빙합니다.</p>
             </article>
-            <article class="rail-item">
-              <span class="rail-icon">⚙</span>
-              <div>
-                <h2>임베디드 직접 배선</h2>
-                <p>RPi5, PCA9685, 전원 분배 구조를 팀이 직접 시공</p>
-              </div>
+            <article>
+              <strong>발표 포인트</strong>
+              <p>기능 소개가 아니라 실제 제작 과정과 팀 역할 분담이 드러나도록 구성했습니다.</p>
             </article>
-            <article class="rail-item">
-              <span class="rail-icon">⎓</span>
-              <div>
-                <h2>안전한 전원 설계</h2>
-                <p>RSP-150-5와 퓨즈 분배로 부하별 보호 구성</p>
+          </div>
+        </section>
+
+        <section id="team" class="team-section">
+          <div class="shell">
+            <div class="section-heading">
+              <h2>4인 팀 역할 구조</h2>
+              <p>
+                발표에서 가장 먼저 보여줘야 하는 메시지는 이 프로젝트가 한 사람이 만든 데모가
+                아니라, 4명이 역할을 나누어 실제로 제작한 결과물이라는 점입니다.
+              </p>
+            </div>
+
+            <div class="team-grid">
+              <article class="team-card">
+                <span class="team-index">Team Member 01</span>
+                <h3>기구 설계</h3>
+                <p>3단 디스크 구조와 캡슐 낙하 경로를 실제 제작 가능한 형상으로 설계했습니다.</p>
+                <ul>
+                  <li>3단 디스크 구조 설계</li>
+                  <li>사선 램프와 캡슐 포켓 정리</li>
+                  <li>가로 토출구와 컵 정렬 구조 검토</li>
+                  <li>SolidWorks 모델링 및 출력 파츠 점검</li>
+                </ul>
+              </article>
+
+              <article class="team-card">
+                <span class="team-index">Team Member 02</span>
+                <h3>회로·전원</h3>
+                <p>모터 구동과 전원 안정화를 담당하며 실제 배선과 보호 구성을 정리했습니다.</p>
+                <ul>
+                  <li>모터 구동 채널 연결</li>
+                  <li>전원 분배와 퓨즈 보호 구성</li>
+                  <li>센서 및 구동부 배선 정리</li>
+                  <li>하드웨어 조립과 테스트 환경 구성</li>
+                </ul>
+              </article>
+
+              <article class="team-card">
+                <span class="team-index">Team Member 03</span>
+                <h3>제어·DB</h3>
+                <p>복용 스케줄과 배출 로직, 기록 저장, 오류 처리 흐름을 제어 관점에서 설계했습니다.</p>
+                <ul>
+                  <li>복용 스케줄 처리 로직</li>
+                  <li>순차 배출 및 상태 전이 설계</li>
+                  <li>이력 저장과 상태 기록 구조</li>
+                  <li>걸림 감지 및 재시도 흐름 정리</li>
+                </ul>
+              </article>
+
+              <article class="team-card">
+                <span class="team-index">Team Member 04</span>
+                <h3>웹·문서·발표</h3>
+                <p>발표용 웹사이트와 시뮬레이터, 시각자료, 발표 흐름을 정리해 시연 경험을 구성했습니다.</p>
+                <ul>
+                  <li>발표 웹사이트 구조 설계</li>
+                  <li>웹 시뮬레이터 제작</li>
+                  <li>시각자료와 증빙 정리</li>
+                  <li>발표 흐름과 설명 포인트 구성</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="solution" class="story-section">
+          <div class="shell story-grid">
+            <article class="story-card">
+              <h2>문제 정의</h2>
+              <ul class="story-list">
+                <li>
+                  <strong>복용 시간을 놓치기 쉽다</strong>
+                  <span>정해진 시간마다 알림만으로는 실제 복용 행동까지 연결되기 어렵습니다.</span>
+                </li>
+                <li>
+                  <strong>여러 종류의 캡슐을 나눠 배출해야 한다</strong>
+                  <span>한 번에 섞여 나오는 것이 아니라 종류별로 정해진 양을 분리해 처리해야 합니다.</span>
+                </li>
+                <li>
+                  <strong>물리적 배출까지 이어져야 한다</strong>
+                  <span>기록과 알림뿐 아니라 실제 토출 구조가 있어야 발표 메시지가 설득력을 가집니다.</span>
+                </li>
+              </ul>
+            </article>
+
+            <article class="story-card">
+              <h2>솔루션 구조</h2>
+              <div class="solution-steps">
+                <div>
+                  <strong>01. 3단 디스크 기반 분리</strong>
+                  <p>캡슐 포켓을 층별로 분리해 순차적으로 1정씩 이동 경로에 올립니다.</p>
+                </div>
+                <div>
+                  <strong>02. 사선 램프 이동</strong>
+                  <p>분리된 캡슐이 경사면을 따라 안정적으로 아래 방향으로 이동합니다.</p>
+                </div>
+                <div>
+                  <strong>03. 가로 원통형 토출</strong>
+                  <p>마지막 구간에서 수평 토출구를 따라 외부 컵으로 정리된 배출이 이루어집니다.</p>
+                </div>
+                <div>
+                  <strong>04. 제어·DB 연동</strong>
+                  <p>배출 상태, 감지 결과, 복용 기록을 웹과 데이터 흐름으로 함께 설명할 수 있습니다.</p>
+                </div>
               </div>
             </article>
           </div>
         </section>
 
-        <section id="readiness" class="readiness-section">
-          <div class="shell">
-            <div class="section-heading">
-              <p class="section-kicker">Presentation Ready</p>
-              <h2>7월 2일 발표에서 바로 보여줄 수 있는 것</h2>
+        <section class="mechanism-section">
+          <div class="shell mechanism-grid">
+            <div class="mechanism-copy">
+              <h2>핵심 구조는 보이는 흐름으로 설명할 수 있어야 했습니다.</h2>
               <p>
-                현재 시점 기준으로 바로 시연 가능한 항목과 발표 현장에서 설명
-                가치가 높은 증빙 요소를 앞쪽에 배치했습니다.
+                발표자는 “캡슐이 어디서 분리되고, 어디로 이동하고, 어떤 방향으로 최종 배출되는지”를
+                한 번에 설명해야 합니다. 그래서 구조 소개 섹션도 실제 캡슐 이동 순서를 기준으로
+                구성했습니다.
               </p>
             </div>
 
-            <div class="readiness-grid">
-              <article class="readiness-card">
-                <div class="card-media">
+            <div class="mechanism-diagram">
+              <article>
+                <span>Layer 01</span>
+                <strong>3단 디스크</strong>
+                <p>종류별 캡슐을 층별로 정리하고 포켓 단위로 배출 시작 위치를 고정</p>
+              </article>
+              <article>
+                <span>Layer 02</span>
+                <strong>사선 램프</strong>
+                <p>포켓에서 나온 캡슐이 중력 방향으로 정리되며 다음 구간으로 이동</p>
+              </article>
+              <article>
+                <span>Layer 03</span>
+                <strong>가로 원통형 토출구</strong>
+                <p>최종적으로 외부 컵 방향으로 캡슐을 안정적으로 안내하는 마감 구조</p>
+              </article>
+              <article>
+                <span>Layer 04</span>
+                <strong>웹·DB 제어 흐름</strong>
+                <p>배출 상태, 걸림, 재시도, 기록 저장을 발표용 화면과 함께 확인</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="evidence" class="evidence-section">
+          <div class="shell">
+            <div class="section-heading">
+              <h2>실제 제작 증빙</h2>
+              <p>
+                완성 예상 렌더, 모델링 과정, 회로·전원 구성, 제어 화면, 테스트 장면, 웹
+                시뮬레이터까지 한 프로젝트의 산출물로 보이도록 연결했습니다.
+              </p>
+            </div>
+
+            <div class="evidence-grid">
+              <article class="evidence-card evidence-card-feature">
+                <div class="evidence-media">
                   <img
-                    src="./assets/source-media/image17.png"
-                    alt="알약통에서 캡슐을 확인하는 테스트 장면"
+                    src="./assets/source-media/image23.png"
+                    alt="스마트 영양제 디스펜서 기대 완성 렌더"
                   />
                 </div>
-                <div class="card-body">
-                  <span class="card-index">01</span>
-                  <h3>1알 정량 토출</h3>
-                  <p>
-                    3단 디스크가 한 알을 분리하고, 가로 토출구 정렬 후 정확히
-                    1알을 배출하는 흐름을 보여줄 수 있습니다.
-                  </p>
-                  <strong>토출 시연 즉시 가능</strong>
+                <div class="evidence-copy">
+                  <span>완성 예상 렌더</span>
+                  <h3>프로젝트가 지향하는 최종 제품 형태</h3>
+                  <p>하드웨어, UI, 토출 구조가 한 몸처럼 보이는 최종 구성을 발표 첫 장면에서 제시합니다.</p>
                 </div>
               </article>
 
-              <article class="readiness-card">
-                <div class="card-media">
-                  <img
-                    src="./assets/source-media/image8.png"
-                    alt="Raspberry Pi 5와 PCA9685 배선도"
-                  />
+              <article class="evidence-card">
+                <div class="evidence-media">
+                  <img src="./assets/source-media/image16.png" alt="기구 설계 모델링 작업 장면" />
                 </div>
-                <div class="card-body">
-                  <span class="card-index">02</span>
-                  <h3>직접 배선 + IR 검증</h3>
-                  <p>
-                    Raspberry Pi 5, PCA9685, 서보, 퓨즈 분배 구조와 IR 감지
-                    논리를 시각적으로 설명할 수 있습니다.
-                  </p>
-                  <strong>하드웨어 설명 준비 완료</strong>
+                <div class="evidence-copy">
+                  <span>기구 설계</span>
+                  <h3>모델링과 파츠 검토</h3>
+                  <p>캡슐 경로를 실제 부품 형상으로 검토하며 램프와 포켓 위치를 조정했습니다.</p>
                 </div>
               </article>
 
-              <article class="readiness-card">
-                <div class="card-media">
-                  <img
-                    src="./assets/source-media/image18.png"
-                    alt="7인치 터치 UI 시연 화면"
-                  />
+              <article class="evidence-card">
+                <div class="evidence-media">
+                  <img src="./assets/source-media/image8.png" alt="Raspberry Pi 5와 PCA9685 배선도" />
                 </div>
-                <div class="card-body">
-                  <span class="card-index">03</span>
-                  <h3>7인치 UI + SQLite 기록</h3>
-                  <p>
-                    터치 UI와 배출 이력 기록을 함께 묶어, 사용자가 만나는 화면과
-                    내부 데이터 흐름을 동시에 설명할 수 있습니다.
-                  </p>
-                  <strong>사용자 흐름 설명 가능</strong>
+                <div class="evidence-copy">
+                  <span>회로 / 전원</span>
+                  <h3>배선도와 전원 분배</h3>
+                  <p>서보 구동, 센서 연결, 전원 보호를 한 장의 회로 자료로 정리해 설명할 수 있습니다.</p>
                 </div>
               </article>
+
+              <article class="evidence-card">
+                <div class="evidence-media">
+                  <img src="./assets/source-media/image18.png" alt="제어 UI 시연 화면" />
+                </div>
+                <div class="evidence-copy">
+                  <span>제어 / DB</span>
+                  <h3>터치 UI와 상태 기록 흐름</h3>
+                  <p>배출 시작, 상태 표시, 복약 기록 화면을 묶어 사용자 관점의 흐름을 보여줍니다.</p>
+                </div>
+              </article>
+
+              <article class="evidence-card">
+                <div class="evidence-media">
+                  <img src="./assets/source-media/image17.png" alt="실제 캡슐 배출 테스트 장면" />
+                </div>
+                <div class="evidence-copy">
+                  <span>테스트</span>
+                  <h3>실제 배출 검증 장면</h3>
+                  <p>캡슐이 실제로 분리되고 토출되는 장면을 테스트 자료로 확보했습니다.</p>
+                </div>
+              </article>
+
+              <article class="evidence-card evidence-card-sim">
+                <div class="sim-teaser" aria-hidden="true">
+                  <span class="sim-teaser-path sim-teaser-path-normal"></span>
+                  <span class="sim-teaser-path sim-teaser-path-jam"></span>
+                  <span class="sim-teaser-path sim-teaser-path-retry"></span>
+                  <span class="sim-teaser-disc"></span>
+                  <span class="sim-teaser-ramp"></span>
+                  <span class="sim-teaser-outlet"></span>
+                  <span class="sim-teaser-capsule"></span>
+                </div>
+                <div class="evidence-copy">
+                  <span>웹 시뮬레이터</span>
+                  <h3>발표 중 직접 보여주는 디지털 트윈</h3>
+                  <p>정상 배출 경로, 걸림 발생 위치, 재시도 흐름을 웹에서 바로 시연할 수 있도록 구성했습니다.</p>
+                  <a class="inline-link" href="./simulator.html">시뮬레이터 열기</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="timeline" class="timeline-section">
+          <div class="shell">
+            <div class="section-heading">
+              <h2>제작 과정 타임라인</h2>
+              <p>
+                발표자가 자연스럽게 설명할 수 있도록 아이디어 정의부터 발표 웹 제작까지의 흐름을
+                단계별로 정리했습니다.
+              </p>
+            </div>
+
+            <div class="timeline-grid">
+              <article>
+                <span>01</span>
+                <h3>아이디어 정의</h3>
+                <p>복용 시간을 놓치는 문제와 자동 배출 필요성을 팀 주제로 설정</p>
+              </article>
+              <article>
+                <span>02</span>
+                <h3>구조 설계</h3>
+                <p>3단 디스크와 사선 램프, 가로 토출구 개념을 구체화</p>
+              </article>
+              <article>
+                <span>03</span>
+                <h3>파츠 모델링</h3>
+                <p>SolidWorks 기반으로 포켓, 램프, 하우징, 토출 경로를 설계</p>
+              </article>
+              <article>
+                <span>04</span>
+                <h3>회로 / 제어 연결</h3>
+                <p>모터 구동, 전원 분배, 센서 감지, 상태 기록 로직을 조립</p>
+              </article>
+              <article>
+                <span>05</span>
+                <h3>배출 테스트</h3>
+                <p>캡슐 분리, 걸림 여부, 배출 경로 안정성을 실제로 검증</p>
+              </article>
+              <article>
+                <span>06</span>
+                <h3>발표 웹 제작</h3>
+                <p>팀 역할, 증빙 자료, 구조 설명, 시뮬레이터를 발표 흐름에 맞게 정리</p>
+              </article>
+              <article>
+                <span>07</span>
+                <h3>개선점 정리</h3>
+                <p>센서 피드백, 캡슐 호환성, 모바일 연동 가능성을 후속 과제로 분리</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="lab-section">
+          <div class="shell lab-grid">
+            <div class="lab-copy">
+              <h2>실제 제작 현장이 보이는 팀 프로젝트</h2>
+              <p>
+                작업실에서 함께 모델링을 검토하고, 배선을 정리하고, 파츠를 맞춰보며 만든 결과물이라는
+                점이 발표에서 신뢰를 만들어 줍니다. 웹사이트도 그 맥락이 보이도록 실제 작업 장면을
+                적극적으로 사용했습니다.
+              </p>
+            </div>
+
+            <figure class="lab-photo">
+              <img src="./assets/source-media/image26.png" alt="팀이 함께 작업 중인 실제 제작 현장" />
+            </figure>
+          </div>
+        </section>
+
+        <section id="tech" class="tech-section">
+          <div class="shell">
+            <div class="section-heading">
+              <h2>기술 구조</h2>
+              <p>
+                기구, 제어, 데이터, 발표 레이어를 나누어 설명하면 프로젝트의 범위와 팀 역할이 더
+                명확하게 보입니다.
+              </p>
+            </div>
+
+            <div class="layer-grid">
+              <article class="layer-card">
+                <h3>Hardware Layer</h3>
+                <p>3단 디스크, 사선 램프, 가로 원통형 토출구, 모터, 센서, 전원 분배 구조</p>
+              </article>
+              <article class="layer-card">
+                <h3>Control Layer</h3>
+                <p>배출 순서 제어, 모터 구동, 걸림 감지, 재시도 흐름, 상태 전이 관리</p>
+              </article>
+              <article class="layer-card">
+                <h3>Data Layer</h3>
+                <p>복용 스케줄, 배출 결과 기록, 최근 상태 저장, 로그와 검증 데이터 추적</p>
+              </article>
+              <article class="layer-card">
+                <h3>Presentation Layer</h3>
+                <p>발표용 웹사이트, 시뮬레이터, 시각자료, 팀 역할 소개, 증빙 자료 연결</p>
+              </article>
+            </div>
+
+            <div class="architecture-flow">
+              <div>사용자 스케줄 입력</div>
+              <div>배출 로직 판단</div>
+              <div>디스크 / 램프 / 토출구 동작</div>
+              <div>센서 확인 및 기록 저장</div>
+              <div>발표용 화면에서 상태 확인</div>
             </div>
           </div>
         </section>
 
         <section id="simulator" class="simulator-section">
-          <div class="shell simulator-grid">
-            <div class="simulator-copy">
-              <p class="section-kicker">Simulator Lab</p>
-              <h2>이번에는 시뮬레이터도 실제 데모처럼 다시 만들었습니다.</h2>
+          <div class="shell simulator-banner">
+            <div class="simulator-banner-copy">
+              <h2>시뮬레이터는 실제 제작 구조 기반으로 다시 구성했습니다.</h2>
               <p>
-                기존의 단순 영상 탭 대신, 로터 회전, 센서 상태, 배출 큐,
-                Validation Log, Jam Test까지 발표 중 직접 눌러볼 수 있는 별도
-                시뮬레이터 화면으로 교체했습니다.
+                추상적인 컷어웨이 대신 3단 디스크, 사선 램프, 수평 토출구, 캡슐 이동 경로가 한눈에
+                보이도록 재설계했습니다. 발표 중에는 정상 배출, 걸림 상황, 재시도 흐름을 버튼으로
+                직접 보여줄 수 있습니다.
               </p>
-
-              <ul class="feature-list">
-                <li>4채널 로터와 배출 루프를 실시간 상태로 표현</li>
-                <li>IR 센서, Hall 위치, 전력 상태, 로그 저장 결과를 한 화면에 표시</li>
-                <li>자동 사이클, 다음 배출, Jam Test, Reset을 직접 조작 가능</li>
-              </ul>
-
-              <div class="hero-actions">
-                <a class="button button-primary" href="./simulator.html"
-                  >시뮬레이터 열기</a
-                >
-                <a class="button button-secondary" href="#proof">실제 시연 보기</a>
-              </div>
-            </div>
-
-            <div class="sim-preview">
-              <div class="sim-preview-header">
-                <strong>Nutronics Simulator Lab</strong>
-                <span class="live-dot">LIVE</span>
-              </div>
-
-              <div class="sim-preview-body">
-                <aside class="sim-preview-rail">
-                  <span class="rail-chip active">자동 사이클 실행</span>
-                  <span class="rail-chip">다음 배출</span>
-                  <span class="rail-chip danger">Jam Test</span>
-                  <span class="rail-chip">Reset</span>
-                </aside>
-
-                <div class="sim-preview-canvas">
-                  <div class="preview-rotor">
-                    <span class="preview-slot preview-slot-top"></span>
-                    <span class="preview-slot preview-slot-right active"></span>
-                    <span class="preview-slot preview-slot-bottom"></span>
-                    <span class="preview-slot preview-slot-left"></span>
-                    <span class="preview-hub"></span>
-                  </div>
-                  <div class="preview-chute">
-                    <span class="preview-beam"></span>
-                    <span class="preview-cup"></span>
-                  </div>
-                </div>
-
-                <aside class="sim-preview-side">
-                  <div class="preview-status-card">
-                    <h3>Validation Log</h3>
-                    <strong>PASS</strong>
-                    <p>모든 검증 통과</p>
-                  </div>
-                  <div class="preview-log-card">
-                    <p>[SYSTEM] 자동 사이클 시작</p>
-                    <p>[SERVO] CH0 정렬 완료</p>
-                    <p>[IR] 센서 감지 확인</p>
-                    <p>[DB] 기록 저장 완료</p>
-                  </div>
-                </aside>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="proof" class="proof-section">
-          <div class="shell proof-grid">
-            <div class="proof-copy">
-              <p class="section-kicker">Demo Proof</p>
-              <h2>실제 동작 영상으로 정확한 토출을 보여드립니다.</h2>
-              <p>
-                발표 현장에서는 구조 설명 뒤에 바로 실제 배출 영상을 보여주는
-                것이 가장 설득력이 큽니다. 토출, 감지, 기록의 순서를 한 번에
-                확인할 수 있도록 구성했습니다.
-              </p>
-
-              <ul class="proof-steps">
-                <li>
-                  <strong>IR 검증 통과</strong>
-                  <span>SEN0503 센서로 실제 토출 여부 확인</span>
-                </li>
-                <li>
-                  <strong>35° 정밀 회전</strong>
-                  <span>MG996R 기반 각도 제어와 정렬 확인</span>
-                </li>
-                <li>
-                  <strong>1알 정량 토출</strong>
-                  <span>포켓 정렬 후 정확히 1알만 배출</span>
-                </li>
-                <li>
-                  <strong>이력 자동 기록</strong>
-                  <span>SQLite에 시간, 종류, 결과 저장</span>
-                </li>
+              <ul>
+                <li>다음 배출, PASS, Jam Test, RETRY 흐름 유지</li>
+                <li>상태 변화와 이벤트 로그를 동시에 표시</li>
+                <li>GitHub Pages 상대경로로 바로 배포 가능한 정적 페이지 구성</li>
               </ul>
             </div>
 
-            <div class="proof-media">
-              <div class="video-frame">
-                <video
-                  controls
-                  playsinline
-                  preload="metadata"
-                  poster="./assets/source-media/media1-poster.jpg"
-                >
-                  <source src="./assets/source-media/media1.mp4" type="video/mp4" />
-                  브라우저가 동영상을 지원하지 않습니다.
-                </video>
-              </div>
-              <div class="proof-status-strip">
-                <span>정확도 100%</span>
-                <span>IR 검증 완료</span>
-                <span>로그 기록 완료</span>
-              </div>
+            <div class="simulator-banner-actions">
+              <a class="button button-primary" href="./simulator.html">시뮬레이터 실행</a>
+              <a class="button button-secondary" href="#evidence">증빙 자료 다시 보기</a>
             </div>
           </div>
         </section>
 
-        <section id="execution" class="execution-section">
-          <div class="shell execution-grid">
-            <div class="execution-copy">
-              <p class="section-kicker">Execution Story</p>
-              <h2>설계부터 제작, 검증까지 8명이 함께 만든 기록입니다.</h2>
-              <p>
-                아이디어를 끝까지 실제로 밀어붙인 팀이라는 점이 이번 발표의
-                중요한 메시지입니다. 설계, 조립, 배선, 시뮬레이터, 문서화가 한
-                팀 안에서 연결되도록 구성했습니다.
-              </p>
-            </div>
-
-            <div class="gallery-grid">
-              <img
-                class="gallery-large"
-                src="./assets/source-media/image26.png"
-                alt="팀이 작업실에서 프로젝트를 진행하는 전체 장면"
-              />
-              <img src="./assets/source-media/image16.png" alt="출력 파츠를 확인하는 장면" />
-              <img src="./assets/source-media/image24.png" alt="배선 테스트를 수행하는 장면" />
-              <img src="./assets/source-media/image25.png" alt="토출 구조 파츠를 손으로 확인하는 장면" />
-              <img src="./assets/source-media/image17.png" alt="알약통 테스트 장면" />
-              <img src="./assets/source-media/image5.png" alt="시뮬레이터를 확인하는 장면" />
-              <img src="./assets/source-media/image4.png" alt="팀 회의와 검증 장면" />
-            </div>
-          </div>
-        </section>
-
-        <section class="status-section">
-          <div class="shell">
-            <div class="status-heading">
-              <h2>2026.07.02 발표 준비 완료</h2>
-              <p>
-                핵심 기능은 모두 검증을 마친 상태로 정리하고, 발표 이후에
-                고도화할 부분은 별도 카드로 명확히 분리했습니다.
-              </p>
-            </div>
-
-            <div class="status-grid">
-              <article class="status-card status-card-ready">
-                <h3>현재 바로 시연 가능</h3>
-                <ul>
-                  <li>
-                    <strong>1알 정량 토출</strong>
-                    <span>회전 · 토출구 구조로 정확한 1알 배출</span>
-                  </li>
-                  <li>
-                    <strong>IR 센서 검증</strong>
-                    <span>SEN0503으로 실제 토출 여부 판정</span>
-                  </li>
-                  <li>
-                    <strong>7인치 터치 UI</strong>
-                    <span>수량 설정, 수동 배출, 상태 확인</span>
-                  </li>
-                  <li>
-                    <strong>이력 자동 기록</strong>
-                    <span>SQLite 저장 및 최근 이력 조회</span>
-                  </li>
-                  <li>
-                    <strong>안정적 전원/회로</strong>
-                    <span>RSP-150-5 SMPS + 퓨즈 분배</span>
-                  </li>
-                </ul>
-              </article>
-
-              <article class="status-card status-card-next">
-                <h3>발표 이후 고도화</h3>
-                <ul>
-                  <li>
-                    <strong>AI 복약 추천 기능</strong>
-                    <span>복약 이력 기반 개인 맞춤 제안</span>
-                  </li>
-                  <li>
-                    <strong>원격 연동 / 모바일 앱</strong>
-                    <span>Wi-Fi 연동 및 알림 지원</span>
-                  </li>
-                  <li>
-                    <strong>다중 사용자 관리</strong>
-                    <span>사용자별 건강 정보와 복약 스케줄 분리</span>
-                  </li>
-                  <li>
-                    <strong>클라우드 백업</strong>
-                    <span>복약 데이터 백업 및 장기 기록화</span>
-                  </li>
-                  <li>
-                    <strong>외관 및 UX 개선</strong>
-                    <span>통합 케이스와 UI/UX 고도화</span>
-                  </li>
-                </ul>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <section class="roadmap-section">
+        <section id="future" class="future-section">
           <div class="shell">
             <div class="section-heading">
-              <p class="section-kicker">Roadmap</p>
-              <h2>7월 2일 이후 로드맵</h2>
+              <h2>향후 고도화 방향</h2>
               <p>
-                발표 이후에는 단기 피드백 반영부터 모바일 연동과 데이터 확장까지
-                단계적으로 고도화를 진행할 계획입니다.
+                현재 발표 범위를 넘어 실제 사용성을 더 높일 수 있는 방향을 정리했습니다. 한계를
+                부정적으로 보이게 하기보다 다음 단계 계획으로 전달하는 것이 목적입니다.
               </p>
             </div>
 
-            <div class="roadmap-row">
-              <article class="roadmap-card">
-                <span>2026.07</span>
-                <h3>발표 완료</h3>
-                <p>피드백 수집 및 시연 정리</p>
+            <div class="future-grid">
+              <article>
+                <h3>캡슐 크기 다양성</h3>
+                <p>포켓 규격과 램프 형상을 조정해 더 다양한 캡슐 형상에 대응</p>
               </article>
-              <article class="roadmap-card">
-                <span>2026.08</span>
-                <h3>AI 추천 프로토타입</h3>
-                <p>복약 이력 기반 추천 로직 시도</p>
+              <article>
+                <h3>걸림 감지 정교화</h3>
+                <p>센서 조합과 제어 로직을 고도화해 더 빠른 예외 감지와 복구 지원</p>
               </article>
-              <article class="roadmap-card">
-                <span>2026.09</span>
-                <h3>모바일 연동</h3>
-                <p>알림 및 원격 상태 확인 베타</p>
+              <article>
+                <h3>실제 센서 피드백 강화</h3>
+                <p>배출 경로별 상태를 더 세밀하게 확인할 수 있는 피드백 구조 확장</p>
               </article>
-              <article class="roadmap-card">
-                <span>2026.10</span>
-                <h3>클라우드 백업</h3>
-                <p>로그 동기화와 대시보드 고도화</p>
+              <article>
+                <h3>모바일 연동 가능성</h3>
+                <p>원격 확인과 복용 알림을 위한 모바일 인터페이스 연결 검토</p>
               </article>
-              <article class="roadmap-card">
-                <span>2026.11</span>
-                <h3>다중 사용자</h3>
-                <p>사용자별 복약 프로필 분리</p>
-              </article>
-              <article class="roadmap-card">
-                <span>2026.12</span>
-                <h3>최종 고도화</h3>
-                <p>통합 케이스와 안정성 마감</p>
+              <article>
+                <h3>케이스 내구성 개선</h3>
+                <p>장시간 사용을 고려한 외관 통합과 하우징 강성 개선</p>
               </article>
             </div>
           </div>
         </section>
 
-        <section id="links" class="links-section">
+        <section class="links-section">
           <div class="shell links-grid">
             <div class="links-copy">
-              <p class="section-kicker">Presentation Links</p>
-              <h2>발표 끝나고 바로 보여줄 수 있는 실제 증빙 링크</h2>
+              <h2>발표 링크와 접근 경로</h2>
               <p>
-                시뮬레이터, GitHub 저장소, 프로젝트 자료를 통해 구조와 동작을
-                직접 확인할 수 있게 마무리했습니다.
+                발표 후에도 팀 프로젝트의 구조와 시연 흐름을 바로 확인할 수 있도록 메인 페이지,
+                시뮬레이터, 저장소 주소를 함께 남깁니다.
               </p>
-              <div class="hero-actions">
-                <a class="button button-primary" href="./simulator.html">Simulator</a>
+              <div class="link-list">
+                <a href="./simulator.html">시뮬레이터 바로가기</a>
                 <a
-                  class="button button-secondary"
+                  href="https://estona815.github.io/smart-pill-sim-website/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GitHub Pages 메인 URL
+                </a>
+                <a
                   href="https://github.com/estona815/smart-pill-sim-website"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Repository
+                  저장소 확인
                 </a>
               </div>
             </div>
@@ -547,19 +587,13 @@
             <div class="qr-grid">
               <article class="qr-card">
                 <h3>Simulator</h3>
-                <img
-                  src="./assets/generated/qr-simulator.png"
-                  alt="시뮬레이터 QR 코드"
-                />
-                <p>실제 동작 시뮬레이터 확인</p>
+                <img src="./assets/generated/qr-simulator.png" alt="시뮬레이터 QR 코드" />
+                <p>발표 현장에서 모바일로 바로 접속</p>
               </article>
               <article class="qr-card">
                 <h3>Repository</h3>
-                <img
-                  src="./assets/generated/qr-repository.png"
-                  alt="Repository QR 코드"
-                />
-                <p>코드, 회로, 문서 전체 확인</p>
+                <img src="./assets/generated/qr-repository.png" alt="저장소 QR 코드" />
+                <p>코드와 자료 구조 확인</p>
               </article>
             </div>
           </div>
@@ -568,39 +602,11 @@
 
       <footer class="site-footer">
         <div class="shell footer-shell">
-          <div class="brand footer-brand">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 64 64" role="img">
-                <path
-                  d="M32 4 55 17.5v29L32 60 9 46.5v-29Z"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="4"
-                />
-                <path
-                  d="M22 44V20l20 24V20"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="5"
-                />
-              </svg>
-            </span>
-            <span class="brand-copy">
-              <strong>Nutronics</strong>
-              <small>융합프로젝트 1조</small>
-            </span>
+          <div>
+            <strong>Nutronics Presentation Website</strong>
+            <p>학생 팀 프로젝트로 설계·제작·테스트한 스마트 디스펜서 발표 페이지</p>
           </div>
-          <p>2026.07.02 PRESENTATION</p>
-          <a
-            class="footer-link"
-            href="https://github.com/estona815/smart-pill-sim-website"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
+          <a class="footer-link" href="./simulator.html">시뮬레이터 열기</a>
         </div>
       </footer>
     </div>
