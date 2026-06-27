@@ -1,169 +1,99 @@
-# 스마트 알약/영양제 자동 디스펜서 웹 시뮬레이터
+# Nutronics Presentation Website
 
-## 목적
+4명이 역할을 나누어 설계·제작·테스트한 스마트 영양제 디스펜서 팀 프로젝트의 발표용 웹사이트입니다.
+메인 페이지는 프로젝트 배경, 팀 역할, 구조 설명, 제작 증빙, 기술 구조를 한 번에 보여주고, 시뮬레이터 페이지는 정상 배출, 걸림, 재시도 흐름을 발표 중 직접 시연할 수 있도록 구성했습니다.
 
-개인 맞춤형 영양제 자동 분배 시스템을 제작하기 전에 알약 크기, 슬롯 구조, 배출구, 센서, 구동 조건을 입력해 실패 가능성을 사전 검토하는 정적 웹 시뮬레이터입니다.
+## 프로젝트 개요
 
-본 시뮬레이터는 발표용 시뮬레이션이며 규칙·확률 기반 사전 검토 도구입니다. 의료 판단 아님, 실제 물리시험과 구분, 반복 검증과 문서화 보조라는 기준을 명확히 둡니다. 실측 성공률은 장기 테스트 이후 제시합니다.
+- 프로젝트명: Nutronics Smart Supplement Dispenser
+- 핵심 메시지: 단순 알림이 아니라 실제 캡슐 배출까지 연결하는 스마트 디스펜서
+- 구조 키워드: 3단 디스크 구조, 사선 램프, 가로 원통형 토출구
+- 발표 목적: 실제 제작 과정을 증빙하고, 4인 역할 분담이 드러나는 팀 프로젝트 발표 경험 제공
 
-공개 웹사이트: https://estona815.github.io/smart-pill-sim-website/
+## 4인 역할 구조
 
-발표 캡처 모드: https://estona815.github.io/smart-pill-sim-website/?mode=presentation
-코덱스 스파크 로컬 모드: http://localhost:4173/?mode=spark
-PPT 연동 모드: http://localhost:4173/?mode=spark&slide=24 (24~28 가능)
+- Team Member 01 / 기구 설계
+  - 3단 디스크 구조 설계
+  - 사선 램프와 캡슐 포켓 설계
+  - 가로 토출구 및 SolidWorks 모델링
+- Team Member 02 / 회로·전원
+  - 모터 구동 채널 연결
+  - 전원 분배 및 퓨즈 보호 구성
+  - 센서·구동부 배선 정리
+- Team Member 03 / 제어·DB
+  - 복용 스케줄 및 순차 배출 로직
+  - 상태 기록과 오류 처리 흐름
+  - 걸림 감지 및 재시도 처리
+- Team Member 04 / 웹·문서·발표
+  - 발표용 웹사이트 제작
+  - 시뮬레이터 구현
+  - 시각자료, 발표 흐름, 증빙 정리
 
-## 현재 하드웨어 전제
+## 주요 기능
 
-- Raspberry Pi 5 사용
-- 7인치 또는 9인치 HDMI 터치스크린 검토
-- MG996R 서보모터 사용
-- Raspberry Pi는 PWM 신호만 출력
-- MG996R 서보모터는 Raspberry Pi에서 전원을 직접 공급하지 않고 별도 6V 전원으로 구동한다.
-- Raspberry Pi 5는 별도 5V/5A USB-C 전원을 사용한다.
-- Raspberry Pi GND와 서보 전원 GND는 공통 연결한다.
-- 토출부 포토센서 또는 IR Break Beam 센서로 알약 배출 여부를 확인한다.
-- 회전 슬롯 휠, 알약 저장통, 배출구, 상부 차단판, 알약 회수 트레이, 3D 프린팅 구조물을 사용한다.
-- PLA 또는 PETG 재질을 검토한다.
-- 현재 초안은 1회~10회 단기 구동 검증을 목표로 한다.
+- 메인 페이지
+  - 4인 팀 프로젝트 메시지가 바로 드러나는 Hero 구성
+  - 문제 정의, 솔루션 구조, 제작 증빙, 타임라인, 기술 구조, 향후 고도화 방향 정리
+  - 실제 작업 사진, 회로도, UI 화면, 테스트 장면 활용
+- 시뮬레이터
+  - 다음 배출
+  - PASS
+  - Jam Test
+  - RETRY
+  - 상태 변화 표시
+  - 실시간 이벤트 로그
+  - 3단 디스크, 사선 램프, 가로 원통형 토출구 기반의 발표용 시각화
 
-## 사용 부품
+## 로컬 실행 방법
 
-- Raspberry Pi 5
-- 5V/5A USB-C 전원
-- MG996R 서보모터
-- 별도 6V 서보 전원
-- 24V 파워서플라이를 사용할 경우 DC-DC Buck 컨버터 24V -> 6V / 3A~5A
-- 토출부 포토센서 또는 IR Break Beam 센서
-- 센서 고정 브래킷
-- 회전 슬롯 휠
-- 알약 저장통
-- 배출구
-- 상부 차단판
-- 알약 회수 트레이
-- 배선 커넥터
-- 부저 또는 LED 알림
-- 전원 스위치, 퓨즈 또는 보호 회로
-- 케이스
+정적 웹사이트이므로 간단한 로컬 서버로 바로 실행할 수 있습니다.
 
-## 현재 사용하지 않는 부품
+```bash
+python3 -m http.server 4173
+```
 
-- 대형 회전 구동부용 별도 제어 모듈
-- 자기식 기준 위치 센서
-- 세밀 분할 회전 제어 구성
+브라우저에서 다음 주소를 엽니다.
 
-## 전원 연결 주의사항
+- 메인 페이지: `http://localhost:4173/`
+- 발표 사이트 직접 경로: `http://localhost:4173/website/index.html`
+- 시뮬레이터: `http://localhost:4173/website/simulator.html`
 
-- 24V 파워서플라이는 Raspberry Pi 또는 MG996R에 직접 연결하지 않는다.
-- Raspberry Pi 5는 5V/5A USB-C 전원을 사용한다.
-- MG996R은 별도 6V 전원 또는 Buck 컨버터로 낮춘 6V 전원을 사용한다.
-- Buck 컨버터 출력은 6V 근처, 최소 3A 이상, 가능하면 5A급을 권장한다.
-- Raspberry Pi GPIO는 서보모터에 PWM 신호만 전달한다.
-- Raspberry Pi GND와 MG996R 전원 GND는 공통 연결해야 한다.
+## GitHub Pages 배포 URL
 
-## 시뮬레이터 기능
+- 메인 페이지: [https://estona815.github.io/smart-pill-sim-website/](https://estona815.github.io/smart-pill-sim-website/)
+- 시뮬레이터: [https://estona815.github.io/smart-pill-sim-website/website/simulator.html](https://estona815.github.io/smart-pill-sim-website/website/simulator.html)
 
-- 예시값 불러오기
-- 초기화
-- 1회 토출 애니메이션 실행
-- 1.0x / 1.5x / 2.0x 속도 토글, 기본 1.5x
-- 100회 반복 검증 실행
-- CSV 저장
-- PNG 저장: Canvas `toBlob()` 기반 저장, 구형 브라우저는 `toDataURL()`로 대체
-- JSON 저장
-- 실패 원인 Top 3 표시
-- 현재 설계 구동 가능성 판단
-- 전원 연결 위험 판정
-- 포토센서 감지 안정성 판정
-- 발표 캡처용 16:9 `.capture-frame` 섹션
-- `?mode=presentation` 기반 발표 모드
-- GitHub Actions 기반 정적 검수: JavaScript 문법, HTML/JS ID 연결, 구형 부품 문구 재등장 확인
+## 저장소 구조
 
-## 발표용 시각 섹션
+```text
+index.html
+website/
+  index.html
+  simulator.html
+  styles.css
+  simulator.css
+  script.js
+  simulator.js
+  assets/
+app/
+tests/
+tools/
+```
 
-- Hero: 4통 카트리지, 회전 돌림판, 가로 캡슐, IR 감지선, 하단 트레이를 보여주는 발표용 구조 시안
-- AI Simulator Dashboard: `design_params.json` → Simulator → Static Checks → Harness → `validation_report.json`
-- Project OS Mockup: 회의록, SolidWorks/배선도/시연 영상 자료 링크, GitHub 커밋/검증 리포트, 다음 액션/담당자/마감일
-- Future Concept: 4통 카트리지, 7인치 전면 터치 UI, 하단 배출 트레이, 내부 RPi5/PCA9685/SMPS/퓨즈박스 배치 시안
-- GitHub Evidence: 실제 확인 가능한 URL/파일만 증빙으로 사용하고, 발표용 이미지는 시각 보조로 분리 표기
-- PPT Source Images: polished PPT에서 추출한 AI 파이프라인, 검증 하네스, AI 시뮬레이터, GitHub 증빙, Project OS, Future Concept 슬라이드 캡처를 웹에 직접 반영
+- `website/`: 발표용 웹사이트와 시뮬레이터
+- `website/assets/`: 렌더, 회로도, 테스트 사진, QR 코드, 컨셉 이미지
+- `app/`: 문서 자동화 실험용 Python 유틸리티
+- `tests/`: Python 유틸리티 테스트
 
-## 실제 증빙 파일
+## 향후 개선점
 
-- `README.md`
-- `index.html`
-- `app.js`
-- `styles.css`
-- `CODEX_PROMPT.md`
-- `GPT_PROMPT.md`
-- `scripts/validate-static-site.js`
-- `validation_report.json`
+- 다양한 캡슐 크기에 대응하는 포켓 규격 보정
+- 걸림 감지 정교화와 예외 처리 강화
+- 실제 센서 피드백 포인트 확장
+- 모바일 연동 및 원격 상태 확인
+- 케이스 내구성과 외관 통합 개선
 
-## 실패 유형
+## 참고
 
-- 정확 배출
-- 미배출
-- 중복 배출
-- 알약 걸림
-- 센서 감지 실패
-- 구동 위치 오차
-
-구동 위치 오차는 구동각 오차, 서보 위치 오차, 기구 유격, 출력 부족, 슬롯 정렬 실패, 기준 위치 누적 오차를 포함한다.
-
-## 설계 가능성 판정 기준
-
-- 구동부 현실성
-- 전원 연결 안정성
-- 원점 자동 보정 없음에 따른 누적 오차
-- 포토센서/IR 감지 안정성
-- 슬롯/알약 치수 적합성
-- 배출구 막힘 가능성
-- 중복 배출 가능성
-- 3D 프린팅 공차 위험
-- 제작 전 추가 확인 필요 항목
-
-포토센서는 배출 여부 확인용이며, 휠의 원점 보정 센서가 아니다. 홀센서는 현재 사용하지 않으며, 대신 수동 초기 정렬과 토출부 포토센서로 단기 배출 확인을 수행한다.
-
-## 한계와 주의 문구
-
-- 규칙·확률 기반 사전 검토이므로 알약 표면 상태, 정전기, 마모, 습도, 출력물 표면 거칠기, 실제 토크 부족을 완전히 반영하지 못한다.
-- 알약 2개가 붙어서 나오면 센서 하나가 1개로 오인할 수 있다.
-- 알약이 센서 빔을 비껴가면 감지 실패가 발생할 수 있다.
-- 기준 위치 자동 확인이 없으므로 전원 재시작 후 수동 정렬이 필요하다.
-- 장시간 반복 운용에서는 위치 누적 오차와 걸림 이후 복구 실패 위험이 커진다.
-- 의료 판단 아님
-- 실제 물리시험과 구분
-- 반복 검증과 문서화 보조
-- 실측 성공률은 장기 테스트 이후 제시
-
-## 성능 최적화
-
-- 정적 HTML/CSS/JS 구조 유지
-- 외부 CDN/폰트 의존 최소화, 시스템 폰트 우선
-- 발표용 이미지는 SVG 중심으로 구성하고 기존 WebP 자산은 보조 자산으로 유지
-- 모든 `<img>`에 `width`, `height`, `loading="lazy"`, `decoding="async"` 적용
-- `scripts/build-static.mjs`에서 `dist`와 gzip/Brotli 산출물, `bundle-report.html` 생성
-- `scripts/perf-check.mjs`로 첫 화면 JS/CSS/이미지 크기 기준을 빠르게 확인
-
-## 향후 개선 계획
-
-- 실제 배출 테스트 데이터를 더 많이 누적해 확률식 보정 신뢰도 향상
-- 알약 형상별 추천 슬롯 치수 테이블 추가
-- 센서 브래킷 위치별 감지 안정성 비교
-- 전원 전압 강하 실측값 입력
-- 장기 반복 테스트 결과 입력 및 리포트 생성
-
-## 검수본/완성본 체크 결과 (2026-06-11)
-
-- 정적 사이트 검증: `scripts/validate-static-site.js` 통과
-- 정적 성능 점검: `scripts/perf-check.mjs` 통과
-  - app.js: 26.5 KB (100 KB 미만)
-  - CSS: 9.8 KB
-  - 이미지: 500 KB 초과 없음
-- 브라우저 런타임(1366/1920/390) 스크린샷 경로에서 콘솔 에러 없음 (404 favicon 요청 제거)
-- 배포 산출물: `dist/` 빌드 성공
-- 발표 최적 모드:
-  - `http://localhost:4173/?mode=presentation`
-  - `http://localhost:4173/?mode=spark&slide=24` ~ `...slide=28`
-  - `https://estona815.github.io/smart-pill-sim-website/`
-
-완성본 사용 시: `dist` 폴더를 그대로 GitHub Pages 정적 호스팅 루트로 업로드하면 된다.
+이 저장소에는 발표 사이트 외에도 제출 문서 자동화를 위한 Python 유틸리티가 함께 들어 있습니다.
+이번 리디자인 작업의 중심은 `website/` 아래 발표 사이트와 시뮬레이터입니다.
