@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 || python3 -m http.server 8787",
+    "dev": "if [ -x ./node_modules/.bin/vite ]; then ./node_modules/.bin/vite --host 0.0.0.0; else python3 -m http.server 8787; fi",
     "build": "node scripts/build-static.mjs",
-    "preview": "vite preview --host 0.0.0.0 || python3 -m http.server 4173 -d dist",
+    "preview": "if [ -x ./node_modules/.bin/vite ]; then ./node_modules/.bin/vite preview --host 0.0.0.0; else python3 -m http.server 4173 -d dist; fi",
     "optimize:images": "python3 scripts/optimize-images.py",
     "analyze": "node scripts/build-static.mjs --analyze-only",
     "lhci": "lhci autorun || node scripts/perf-check.mjs",
