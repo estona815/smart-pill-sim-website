@@ -1,10 +1,10 @@
 const DURATION = 6400;
 
 const captions = [
-  "4개 알약통 내부 디스크가 회전합니다.",
-  "각 알약통 아래에서 캡슐이 한 알씩 토출됩니다.",
-  "토출된 4알이 가운데 수집부에 모입니다.",
-  "모인 4알이 바깥 배출구로 한 번에 빠집니다.",
+  "알약통 회전",
+  "한 알씩 토출",
+  "중앙 수집",
+  "외부 배출",
 ];
 
 const phases = [
@@ -147,7 +147,7 @@ function stop() {
   playing = false;
   window.cancelAnimationFrame(frameId);
   refs.stage.classList.remove("is-playing");
-  refs.playLabel.textContent = progress >= 1 ? "재생" : "이어보기";
+  refs.playLabel.textContent = "재생";
 }
 
 function tick(now) {

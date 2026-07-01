@@ -6,13 +6,14 @@
     <title>PILLCARE | 캡슐 배출 시뮬레이터</title>
     <meta
       name="description"
-      content="4개 돌림판에서 나온 캡슐 4알이 아래 수집부에 모인 뒤 바깥 배출구로 한 번에 빠지는 발표용 시뮬레이터"
+      content="알약통 회전, 중앙 수집, 외부 배출을 보여주는 발표용 시뮬레이터"
     />
+    <link rel="preload" as="image" href="./assets/optimized/device-render.webp" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%23f4f8ff' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%23f4f8ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./simulator.css?v=render-20260701" />
+    <link rel="stylesheet" href="./simulator.css?v=stable-20260701" />
   </head>
   <body>
     <main class="simulator-shell">
@@ -37,8 +38,8 @@
             </svg>
           </span>
           <span>
-            <strong>스마트 캡슐 디스펜서</strong>
-            <small>전체 장치 배출 데모</small>
+            <strong>Nutronics</strong>
+            <small>배출 시연</small>
           </span>
         </a>
 
@@ -48,7 +49,7 @@
       <section class="stage-area" aria-labelledby="sim-title">
         <div class="title-block">
           <h1 id="sim-title">4알 배출</h1>
-          <p id="stage-caption">4개 돌림판이 회전 대기합니다.</p>
+          <p id="stage-caption">알약통 회전</p>
         </div>
 
         <div id="device-stage" class="device-stage" data-phase="ready">
@@ -211,19 +212,19 @@
         </button>
         <button class="step-button" type="button" data-step="1">
           <span>02</span>
-          4알 선택
+          토출
         </button>
         <button class="step-button" type="button" data-step="2">
           <span>03</span>
-          아래 수집
+          수집
         </button>
         <button class="step-button" type="button" data-step="3">
           <span>04</span>
-          바깥 배출
+          배출
         </button>
       </section>
     </main>
 
-    <script src="./simulator.js?v=bin-rotor-20260701"></script>
+    <script src="./simulator.js?v=stable-20260701"></script>
   </body>
 </html>

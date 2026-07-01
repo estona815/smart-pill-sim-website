@@ -34,6 +34,8 @@ body {
   font-family: "SUIT", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui,
     sans-serif;
   overflow-x: hidden;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 a {
