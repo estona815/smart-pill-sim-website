@@ -3,20 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PILLCARE | 한 알 배출 쇼케이스</title>
+    <title>PILLCARE | 캡슐 배출 시뮬레이터</title>
     <meta
       name="description"
-      content="실제 프로토타입 사진 위에서 약 한 알이 컵으로 떨어지는 흐름을 영상처럼 보여주는 발표용 쇼케이스"
+      content="4개 돌림판에서 나온 캡슐 4알이 아래 수집부에 모인 뒤 바깥 배출구로 한 번에 빠지는 발표용 시뮬레이터"
     />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 55 17.5v29L32 60 9 46.5v-29Z' fill='none' stroke='%23f4f8ff' stroke-width='4'/%3E%3Cpath d='M22 44V20l20 24V20' fill='none' stroke='%23f4f8ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='5'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./simulator.css?v=showcase-20260701" />
+    <link rel="stylesheet" href="./simulator.css?v=render-20260701" />
   </head>
   <body>
-    <main class="sim-page">
-      <header class="topbar">
+    <main class="simulator-shell">
+      <header class="sim-header">
         <a class="brand" href="./index.html" aria-label="Nutronics 메인 페이지">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 64 64">
@@ -38,112 +38,188 @@
           </span>
           <span>
             <strong>스마트 캡슐 디스펜서</strong>
-            <small>한 알 배출 쇼케이스</small>
+            <small>전체 장치 배출 데모</small>
           </span>
         </a>
 
-        <nav class="top-actions" aria-label="페이지 이동">
-          <a href="./index.html">메인</a>
-        </nav>
+        <a class="back-link" href="./index.html">메인</a>
       </header>
 
-      <section class="hero">
-        <div class="stage-wrap">
-          <div id="dispense-stage" class="dispense-stage" data-phase="idle">
-            <img
-              class="structure-photo"
-              src="./assets/optimized/current-structure.webp"
-              alt="현재 제작 중인 스마트 캡슐 디스펜서 프로토타입 구조"
-              width="1600"
-              height="2133"
-              decoding="async"
-              fetchpriority="high"
-            />
+      <section class="stage-area" aria-labelledby="sim-title">
+        <div class="title-block">
+          <h1 id="sim-title">4알 배출</h1>
+          <p id="stage-caption">4개 돌림판이 회전 대기합니다.</p>
+        </div>
 
-            <div class="stage-copy">
-              <span class="eyebrow">Live Demo</span>
-              <h1>약이 컵에 떨어지는 순간</h1>
-              <p id="stage-caption">약통에서 한 알이 준비됩니다.</p>
-            </div>
+        <div id="device-stage" class="device-stage" data-phase="ready">
+          <img
+            class="device-render"
+            src="./assets/optimized/device-render.webp"
+            alt="스마트 캡슐 디스펜서 전체 장치 렌더"
+            width="1599"
+            height="900"
+            decoding="async"
+            fetchpriority="high"
+          />
 
-            <svg class="flow-svg" viewBox="0 0 100 100" aria-hidden="true">
-              <path
-                class="flow-shadow"
-                d="M75 30 C70 34 68 38 66 43 C61 48 55 51 51 58 C48 63 49 69 52 75"
-              />
-              <path
-                id="flow-path"
-                class="flow-path"
-                d="M75 30 C70 34 68 38 66 43 C61 48 55 51 51 58 C48 63 49 69 52 75"
-                pathLength="100"
-              />
-            </svg>
+          <svg
+            class="path-overlay"
+            viewBox="0 0 1599 900"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#f7c44f" />
+                <stop offset="48%" stop-color="#4fe0d2" />
+                <stop offset="100%" stop-color="#78a8ff" />
+              </linearGradient>
+              <filter id="routeGlow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-            <div class="focus-point source-point">
-              <span></span>
-              약통
-            </div>
-            <div class="focus-point gate-point">
-              <span></span>
-              한 알 선택
-            </div>
-            <div class="focus-point chute-point">
-              <span></span>
-              아래 통로
-            </div>
-            <div class="focus-point cup-point">
-              <span></span>
-              컵
-            </div>
+            <g class="rotors" aria-hidden="true">
+              <g class="rotor" transform="translate(690 252)">
+                <ellipse rx="68" ry="34" />
+                <g class="rotor-wheel">
+                  <path d="M-46 0h92M0-25v50" />
+                  <circle cx="-28" cy="-11" r="9" />
+                  <circle cx="24" cy="9" r="9" />
+                </g>
+              </g>
+              <g class="rotor" transform="translate(1138 252)">
+                <ellipse rx="74" ry="35" />
+                <g class="rotor-wheel">
+                  <path d="M-50 0h100M0-26v52" />
+                  <circle cx="-30" cy="10" r="9" />
+                  <circle cx="28" cy="-10" r="9" />
+                </g>
+              </g>
+              <g class="rotor" transform="translate(365 586)">
+                <ellipse rx="68" ry="35" />
+                <g class="rotor-wheel">
+                  <path d="M-45 0h90M0-25v50" />
+                  <circle cx="-24" cy="10" r="9" />
+                  <circle cx="24" cy="-9" r="9" />
+                </g>
+              </g>
+              <g class="rotor" transform="translate(878 430)">
+                <ellipse rx="50" ry="26" />
+                <g class="rotor-wheel">
+                  <path d="M-34 0h68M0-19v38" />
+                  <circle cx="-18" cy="-8" r="7" />
+                  <circle cx="18" cy="8" r="7" />
+                </g>
+              </g>
+            </g>
 
-            <div class="rotor" aria-hidden="true">
-              <span></span>
-            </div>
-            <div id="capsule" class="capsule" aria-hidden="true"></div>
-            <div id="drop-flash" class="drop-flash" aria-hidden="true"></div>
-            <div id="done-mark" class="done-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M20 6 9 17l-5-5" />
+            <g class="feed-shadows">
+              <path d="M676 340 C716 425 758 530 800 600" />
+              <path d="M1064 350 C1004 432 902 548 800 600" />
+              <path d="M420 650 C548 680 690 648 800 600" />
+              <path d="M858 488 C846 542 825 578 800 600" />
+            </g>
+            <g class="feed-routes">
+              <path class="feed-route" d="M676 340 C716 425 758 530 800 600" />
+              <path class="feed-route" d="M1064 350 C1004 432 902 548 800 600" />
+              <path class="feed-route" d="M420 650 C548 680 690 648 800 600" />
+              <path class="feed-route" d="M858 488 C846 542 825 578 800 600" />
+            </g>
+            <path id="out-shadow" d="M800 600 C680 650 520 646 350 606" />
+            <path id="out-route" d="M800 600 C680 650 520 646 350 606" />
+
+            <g class="station" data-step="0" transform="translate(930 318)">
+              <circle r="19" />
+              <text y="6">1</text>
+            </g>
+            <g class="station" data-step="1" transform="translate(852 500)">
+              <circle r="19" />
+              <text y="6">2</text>
+            </g>
+            <g class="station" data-step="2" transform="translate(800 600)">
+              <circle r="19" />
+              <text y="6">3</text>
+            </g>
+            <g class="station" data-step="3" transform="translate(350 606)">
+              <circle r="19" />
+              <text y="6">4</text>
+            </g>
+
+            <g class="moving-capsule" data-capsule="0">
+              <ellipse class="capsule-shadow" cx="0" cy="10" rx="24" ry="8" />
+              <g class="capsule-body">
+                <rect x="-28" y="-12" width="56" height="24" rx="12" />
+                <path d="M0 -12v24" />
+              </g>
+            </g>
+            <g class="moving-capsule" data-capsule="1">
+              <ellipse class="capsule-shadow" cx="0" cy="10" rx="24" ry="8" />
+              <g class="capsule-body">
+                <rect x="-28" y="-12" width="56" height="24" rx="12" />
+                <path d="M0 -12v24" />
+              </g>
+            </g>
+            <g class="moving-capsule" data-capsule="2">
+              <ellipse class="capsule-shadow" cx="0" cy="10" rx="24" ry="8" />
+              <g class="capsule-body">
+                <rect x="-28" y="-12" width="56" height="24" rx="12" />
+                <path d="M0 -12v24" />
+              </g>
+            </g>
+            <g class="moving-capsule" data-capsule="3">
+              <ellipse class="capsule-shadow" cx="0" cy="10" rx="24" ry="8" />
+              <g class="capsule-body">
+                <rect x="-28" y="-12" width="56" height="24" rx="12" />
+                <path d="M0 -12v24" />
+              </g>
+            </g>
+
+            <g class="arrival-flash">
+              <ellipse cx="350" cy="606" rx="96" ry="38" />
+              <path d="M298 586 C335 626 382 628 420 586" />
+            </g>
+          </svg>
+
+          <div class="stage-controls" aria-label="시뮬레이터 제어">
+            <button id="play-button" class="play-button" type="button">
+              <span class="play-icon" aria-hidden="true"></span>
+              <span id="play-label">재생</span>
+            </button>
+            <button id="replay-button" class="replay-button" type="button" aria-label="처음부터 다시 보기">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7v6h6" />
+                <path d="M5 13a7 7 0 1 0 2-5" />
               </svg>
-            </div>
-
-            <div class="controls" aria-label="시뮬레이션 제어">
-              <button id="play-button" class="primary-button" type="button">재생</button>
-              <button id="replay-button" class="icon-button" type="button" aria-label="처음부터 다시 보기">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7v6h6" />
-                  <path d="M5 13a7 7 0 1 0 2-5" />
-                </svg>
-              </button>
-            </div>
-
-            <div class="film-bar" aria-hidden="true">
-              <div id="film-progress" class="film-progress"></div>
-            </div>
+            </button>
           </div>
         </div>
       </section>
 
-      <section class="flow-steps" aria-label="배출 흐름">
-        <button class="step-pill is-active" type="button" data-step="0">
+      <section class="step-strip" aria-label="배출 단계">
+        <button class="step-button is-active" type="button" data-step="0">
           <span>01</span>
           준비
         </button>
-        <button class="step-pill" type="button" data-step="1">
+        <button class="step-button" type="button" data-step="1">
           <span>02</span>
-          한 알 선택
+          4알 선택
         </button>
-        <button class="step-pill" type="button" data-step="2">
+        <button class="step-button" type="button" data-step="2">
           <span>03</span>
-          이동
+          아래 수집
         </button>
-        <button class="step-pill" type="button" data-step="3">
+        <button class="step-button" type="button" data-step="3">
           <span>04</span>
-          컵 도착
+          바깥 배출
         </button>
       </section>
     </main>
 
-    <script src="./simulator.js?v=showcase-20260701"></script>
+    <script src="./simulator.js?v=batch-rotor-20260701"></script>
   </body>
 </html>
