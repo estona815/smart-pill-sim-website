@@ -220,14 +220,14 @@ svg {
 }
 
 .rotors {
-  opacity: 0.95;
-  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.32));
+  opacity: 0.9;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.38));
 }
 
 .rotor ellipse {
-  fill: rgba(6, 16, 28, 0.72);
-  stroke: rgba(228, 244, 255, 0.42);
-  stroke-width: 2.6;
+  fill: rgba(6, 16, 28, 0.46);
+  stroke: rgba(228, 244, 255, 0.36);
+  stroke-width: 2.2;
 }
 
 .rotor-wheel {
@@ -237,15 +237,15 @@ svg {
 
 .rotor-wheel path {
   fill: none;
-  stroke: rgba(246, 251, 255, 0.82);
-  stroke-width: 6;
+  stroke: rgba(246, 251, 255, 0.74);
+  stroke-width: 5.5;
   stroke-linecap: round;
 }
 
 .rotor-wheel circle {
   fill: #82a8ff;
-  stroke: rgba(255, 255, 255, 0.78);
-  stroke-width: 2.2;
+  stroke: rgba(255, 255, 255, 0.68);
+  stroke-width: 2;
 }
 
 .device-stage.is-playing .rotor-wheel,
