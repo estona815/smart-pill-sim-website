@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PILLCARE | 실물 구조 시뮬레이터</title>
+    <title>PILLCARE | 한 알 배출 쇼케이스</title>
     <meta
       name="description"
-      content="완성품 렌더와 실제 제작 파츠를 기준으로 구성한 스마트 캡슐 알약 디스펜서 실물 구조 시뮬레이터"
+      content="실제 프로토타입 사진 위에서 약 한 알이 컵으로 떨어지는 흐름을 영상처럼 보여주는 발표용 쇼케이스"
     />
     <link
       rel="icon"
@@ -15,11 +15,11 @@
     <link rel="stylesheet" href="./simulator.css" />
   </head>
   <body>
-    <div class="product-page">
-      <header class="product-header">
-        <a class="product-brand" href="./index.html" aria-label="Nutronics 메인 페이지">
+    <main class="sim-page">
+      <header class="topbar">
+        <a class="brand" href="./index.html" aria-label="Nutronics 메인 페이지">
           <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" role="img">
+            <svg viewBox="0 0 64 64">
               <path
                 d="M32 4 55 17.5v29L32 60 9 46.5v-29Z"
                 fill="none"
@@ -36,376 +36,113 @@
               />
             </svg>
           </span>
-          <span class="brand-copy">
-            <strong>스마트 캡슐 알약 디스펜서</strong>
-            <small>실물 구조 시뮬레이터</small>
+          <span>
+            <strong>스마트 캡슐 디스펜서</strong>
+            <small>한 알 배출 쇼케이스</small>
           </span>
         </a>
 
-        <div class="header-actions">
-          <span class="header-status">
-            <span class="status-dot"></span>
-            연결됨
-          </span>
-          <a class="header-link" href="./index.html">메인 페이지</a>
-          <a
-            class="header-link header-link-primary"
-            href="https://estona815.github.io/smart-pill-sim-website/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub Pages
-          </a>
-        </div>
+        <nav class="top-actions" aria-label="페이지 이동">
+          <a href="./index.html">메인</a>
+        </nav>
       </header>
 
-      <div class="sim-shell">
-        <aside class="control-rail">
-          <nav class="rail-nav" aria-label="시뮬레이터 메뉴">
-            <div class="rail-nav-item is-active">실물 구조 시뮬레이터</div>
-            <div class="rail-nav-item">센서 상태</div>
-            <div class="rail-nav-item">복약 스케줄</div>
-            <div class="rail-nav-item">이력 로그</div>
-            <div class="rail-nav-item">설정</div>
-          </nav>
+      <section class="hero">
+        <div class="stage-wrap">
+          <div id="dispense-stage" class="dispense-stage" data-phase="idle">
+            <img
+              class="structure-photo"
+              src="./assets/optimized/current-structure.webp"
+              alt="현재 제작 중인 스마트 캡슐 디스펜서 프로토타입 구조"
+              width="1600"
+              height="2133"
+              decoding="async"
+              fetchpriority="high"
+            />
 
-          <section class="rail-card">
-            <div class="rail-head">
-              <h2>복약 스케줄</h2>
-              <span id="queue-count" class="rail-chip">4건</span>
-            </div>
-            <div id="queue-list" class="queue-list"></div>
-          </section>
-
-          <section class="rail-card part-card">
-            <div class="rail-head">
-              <h2>실물 파츠 참고</h2>
-              <span class="rail-chip rail-chip-muted">3컷</span>
+            <div class="stage-copy">
+              <span class="eyebrow">Live Demo</span>
+              <h1>약이 컵에 떨어지는 순간</h1>
+              <p id="stage-caption">약통에서 한 알이 준비됩니다.</p>
             </div>
 
-            <article class="part-item">
-              <img src="./assets/source-media/image25.png" alt="사선 램프 토출 파츠 실물 사진" />
-              <div>
-                <strong>사선 램프 파츠</strong>
-                <span>3D 프린팅 토출 경로 부품</span>
-              </div>
-            </article>
-
-            <article class="part-item">
-              <img src="./assets/source-media/image24.png" alt="퓨즈 보드와 전원 배선 실물 사진" />
-              <div>
-                <strong>전원·퓨즈 보드</strong>
-                <span>실제 보호 회로와 배선 구조</span>
-              </div>
-            </article>
-
-            <article class="part-item">
-              <img src="./assets/source-media/image17.png" alt="실제 캡슐 배출 테스트 사진" />
-              <div>
-                <strong>실제 배출 테스트</strong>
-                <span>프로토타입 캡슐 토출 검증 장면</span>
-              </div>
-            </article>
-          </section>
-
-          <section class="rail-card rail-metrics">
-            <div class="metric-line">
-              <span>남은 큐</span>
-              <strong id="remaining-count">4건</strong>
-            </div>
-            <div class="metric-line">
-              <span>완료 수량</span>
-              <strong id="dispensed-count">0정</strong>
-            </div>
-            <button id="reset-button" class="rail-reset" type="button">시나리오 초기화</button>
-          </section>
-        </aside>
-
-        <main class="product-main">
-          <section class="hero-stage-card">
-            <div class="stage-info">
-              <h1>실물 구조 시뮬레이터</h1>
-              <p id="stage-state-label" class="stage-lead">
-                대기 중: 완성품 기준 카트리지와 배출 경로를 그대로 따라가며 다음 배출을
-                준비합니다.
-              </p>
-              <p class="stage-body">
-                상단 4개 카트리지, 전면 터치 UI, 하단 토출 깔때기, 우측 제어 보드를 실제 완성품
-                형태에 맞춰 보여주는 발표용 검증 화면입니다.
-              </p>
-
-              <div class="stage-tags">
-                <span class="info-pill info-pill-live">
-                  <span class="status-dot"></span>
-                  시뮬레이션 준비 완료
-                </span>
-                <span id="current-channel-chip" class="info-pill">CH0 비타민</span>
-              </div>
-
-              <ul class="structure-points">
-                <li>
-                  <strong>4개 독립 카트리지</strong>
-                  <span>비타민, 미네랄, 오메가3, 프로바이오틱을 상단에서 분리 저장</span>
-                </li>
-                <li>
-                  <strong>정면 터치 UI</strong>
-                  <span>복약량과 현재 진행 상태를 전면 화면에서 직관적으로 확인</span>
-                </li>
-                <li>
-                  <strong>사선 램프 + 컵 토출</strong>
-                  <span>실제 구조처럼 깔때기와 컵 방향으로 캡슐 이동 경로를 표시</span>
-                </li>
-              </ul>
-            </div>
-
-            <div id="sim-stage" class="product-stage" data-mode="ready" data-channel="CH0">
-              <img
-                class="product-backdrop"
-                src="./assets/source-media/image23.png"
-                alt="완성품 기준 스마트 영양제 디스펜서 렌더"
+            <svg class="flow-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <path
+                class="flow-shadow"
+                d="M75 30 C70 34 68 38 66 43 C61 48 55 51 51 58 C48 63 49 69 52 75"
               />
+              <path
+                id="flow-path"
+                class="flow-path"
+                d="M75 30 C70 34 68 38 66 43 C61 48 55 51 51 58 C48 63 49 69 52 75"
+                pathLength="100"
+              />
+            </svg>
 
-              <svg class="route-layer" viewBox="0 0 100 100" aria-hidden="true">
-                <path
-                  class="route route-full route-ch0"
-                  d="M26 16 L26 30 C26 42 32 50 38 59 C41 65 43 71 44 79 L45 86"
-                />
-                <path
-                  class="route route-full route-ch1"
-                  d="M39 16 L39 30 C39 42 41 50 43 59 C44 65 45 71 46 79 L46.5 86"
-                />
-                <path
-                  class="route route-full route-ch2"
-                  d="M52 16 L52 30 C52 42 49 50 47 59 C46 65 46.5 71 47 79 L47.8 86"
-                />
-                <path
-                  class="route route-full route-ch3"
-                  d="M65 16 L65 30 C65 40 58 49 51 58 C48 64 48 71 48.4 79 L49 86"
-                />
+            <div class="focus-point source-point">
+              <span></span>
+              약통
+            </div>
+            <div class="focus-point gate-point">
+              <span></span>
+              한 알 선택
+            </div>
+            <div class="focus-point chute-point">
+              <span></span>
+              아래 통로
+            </div>
+            <div class="focus-point cup-point">
+              <span></span>
+              컵
+            </div>
 
-                <path class="route route-jam route-ch0" d="M26 16 L26 30 C26 42 32 50 38 59" />
-                <path class="route route-jam route-ch1" d="M39 16 L39 30 C39 42 41 50 43 59" />
-                <path class="route route-jam route-ch2" d="M52 16 L52 30 C52 42 49 50 47 59" />
-                <path class="route route-jam route-ch3" d="M65 16 L65 30 C65 40 58 49 51 58" />
-
-                <path
-                  class="route route-retry route-ch0"
-                  d="M38 59 C36 63 36 67 40 72 C43 76 44 80 45 86"
-                />
-                <path
-                  class="route route-retry route-ch1"
-                  d="M43 59 C41 64 42 68 44 73 C45 77 46 80 46.5 86"
-                />
-                <path
-                  class="route route-retry route-ch2"
-                  d="M47 59 C46 64 46 68 46.5 73 C47 77 47.4 80 47.8 86"
-                />
-                <path
-                  class="route route-retry route-ch3"
-                  d="M51 58 C49 63 48 67 48.2 73 C48.4 77 48.6 80 49 86"
-                />
+            <div class="rotor" aria-hidden="true">
+              <span></span>
+            </div>
+            <div id="capsule" class="capsule" aria-hidden="true"></div>
+            <div id="drop-flash" class="drop-flash" aria-hidden="true"></div>
+            <div id="done-mark" class="done-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
               </svg>
-
-              <div class="channel-marker marker-ch0">VITAMIN</div>
-              <div class="channel-marker marker-ch1">MINERAL</div>
-              <div class="channel-marker marker-ch2">OMEGA 3</div>
-              <div class="channel-marker marker-ch3">PROBIOTIC</div>
-
-              <div class="stage-chip gate-chip">토출 게이트</div>
-              <div class="stage-chip chute-chip">사선 램프</div>
-              <div class="stage-chip cup-chip">배출 컵</div>
-              <div class="stage-chip board-chip">제어 보드</div>
-              <div class="stage-chip bay-chip">전원 분배</div>
-
-              <div id="active-capsule" class="active-capsule" aria-hidden="true"></div>
-              <div id="jam-marker" class="jam-marker">Jam 위치</div>
-              <div id="retry-badge" class="retry-badge">재정렬</div>
-            </div>
-          </section>
-
-          <section class="step-card">
-            <div id="step-flow" class="step-flow" data-stage="0">
-              <div class="flow-step">
-                <span>1</span>
-                <strong>약물 선택</strong>
-              </div>
-              <div class="flow-step">
-                <span>2</span>
-                <strong>게이트 정렬</strong>
-              </div>
-              <div class="flow-step">
-                <span>3</span>
-                <strong>실물 토출</strong>
-              </div>
-              <div class="flow-step">
-                <span>4</span>
-                <strong>검증 및 기록</strong>
-              </div>
-            </div>
-            <p id="status-message" class="step-note">
-              선택된 카트리지에서 실제 완성품 기준 토출 경로를 따라 캡슐이 컵으로 이동합니다.
-            </p>
-          </section>
-
-          <section class="evidence-strip" aria-label="실물 제작 증빙">
-            <article class="evidence-card">
-              <img src="./assets/source-media/image17.png" alt="캡슐 배출 검증 테스트 장면" />
-              <div class="evidence-copy">
-                <strong>실제 배출 검증</strong>
-                <span>프로토타입에서 캡슐이 실제로 떨어지는 테스트 기준</span>
-              </div>
-            </article>
-
-            <article class="evidence-card">
-              <img src="./assets/source-media/image25.png" alt="사선 램프와 토출 파츠 실물 장면" />
-              <div class="evidence-copy">
-                <strong>사선 램프 구조</strong>
-                <span>캡슐이 걸리지 않도록 유도하는 핵심 토출 파츠</span>
-              </div>
-            </article>
-
-            <article class="evidence-card">
-              <img src="./assets/source-media/image24.png" alt="전원 공급 장치와 퓨즈 보드 구조" />
-              <div class="evidence-copy">
-                <strong>전원·보호 회로</strong>
-                <span>퓨즈 분배 보드와 안전 배선을 실제 부품 사진으로 제시</span>
-              </div>
-            </article>
-          </section>
-        </main>
-
-        <aside class="status-panel">
-          <article class="status-card action-card action-card-primary">
-            <div class="card-head">
-              <div>
-                <h2>다음 배출</h2>
-                <p>현재 선택된 실물 카트리지 기준 토출 루프를 시작합니다.</p>
-              </div>
-              <span class="small-chip">자동 모드</span>
             </div>
 
-            <div class="capsule-panel">
-              <span class="capsule-sample"></span>
-              <div>
-                <strong id="current-capsule">CH0 비타민</strong>
-                <span>1정</span>
-              </div>
-            </div>
-
-            <div class="timer-row">
-              <span>예상 배출 시간</span>
-              <strong id="cycle-note">READY</strong>
-            </div>
-
-            <div class="button-row">
-              <button id="next-dispense" class="action-button action-button-primary" type="button">
-                다음 배출
-              </button>
-              <button id="pass-button" class="action-button action-button-ghost" type="button">
-                PASS
+            <div class="controls" aria-label="시뮬레이션 제어">
+              <button id="play-button" class="primary-button" type="button">재생</button>
+              <button id="replay-button" class="icon-button" type="button" aria-label="처음부터 다시 보기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7v6h6" />
+                  <path d="M5 13a7 7 0 1 0 2-5" />
+                </svg>
               </button>
             </div>
-          </article>
 
-          <article class="status-card action-card">
-            <div class="card-head">
-              <div>
-                <h2>Jam Test</h2>
-                <p>실제 토출 경로 중 사선 램프 하단에서 걸림 시나리오를 재현합니다.</p>
-              </div>
-              <span class="small-chip small-chip-muted">테스트</span>
+            <div class="film-bar" aria-hidden="true">
+              <div id="film-progress" class="film-progress"></div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div class="button-row">
-              <button id="jam-test" class="action-button action-button-warn" type="button">
-                Jam Test
-              </button>
-              <button id="retry-button" class="action-button action-button-ghost" type="button">
-                RETRY
-              </button>
-            </div>
-          </article>
-
-          <article class="status-card sensor-card">
-            <div class="card-head">
-              <div>
-                <h2>센서 상태</h2>
-                <p>실물 장치 기준 포지션, IR, 모터, 전원 상태를 함께 표시합니다.</p>
-              </div>
-            </div>
-
-            <div class="sensor-grid">
-              <div>
-                <span>포지션 센서</span>
-                <strong id="position-status">대기</strong>
-              </div>
-              <div>
-                <span>IR 센서</span>
-                <strong id="sensor-state">대기</strong>
-              </div>
-              <div>
-                <span>모터 상태</span>
-                <strong id="motor-state">정지</strong>
-              </div>
-              <div>
-                <span>전원 상태</span>
-                <strong id="power-state">정상</strong>
-              </div>
-            </div>
-
-            <div class="sensor-result">
-              <div>
-                <span>검증 상태</span>
-                <strong id="current-state">다음 배출 대기</strong>
-              </div>
-              <span id="status-badge" class="badge-pill">READY</span>
-            </div>
-          </article>
-
-          <article class="status-card validation-card">
-            <div class="card-head">
-              <h2>Validation Log</h2>
-              <span id="log-status" class="small-chip">5 events</span>
-            </div>
-
-            <div class="validation-grid">
-              <div>
-                <span>현재 단계</span>
-                <strong id="current-step">포켓 정렬 대기</strong>
-              </div>
-              <div>
-                <span>걸림 위치</span>
-                <strong id="jam-point">없음</strong>
-              </div>
-              <div>
-                <span>정상 완료</span>
-                <strong id="normal-count">0회</strong>
-              </div>
-              <div>
-                <span>Jam 발생</span>
-                <strong id="jam-count">0회</strong>
-              </div>
-              <div>
-                <span>재시도</span>
-                <strong id="retry-count">0회</strong>
-              </div>
-              <div>
-                <span>완료 수량</span>
-                <strong id="dispensed-count-panel">0정</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="status-card log-card">
-            <div class="card-head">
-              <h2>실시간 로그</h2>
-              <span class="small-chip small-chip-dark">LIVE</span>
-            </div>
-            <div id="event-log" class="event-log"></div>
-          </article>
-        </aside>
-      </div>
-    </div>
+      <section class="flow-steps" aria-label="배출 흐름">
+        <button class="step-pill is-active" type="button" data-step="0">
+          <span>01</span>
+          준비
+        </button>
+        <button class="step-pill" type="button" data-step="1">
+          <span>02</span>
+          한 알 선택
+        </button>
+        <button class="step-pill" type="button" data-step="2">
+          <span>03</span>
+          이동
+        </button>
+        <button class="step-pill" type="button" data-step="3">
+          <span>04</span>
+          컵 도착
+        </button>
+      </section>
+    </main>
 
     <script src="./simulator.js"></script>
   </body>
