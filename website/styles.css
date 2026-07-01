@@ -48,6 +48,8 @@ body {
   font-family: "Avenir Next", "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR",
     sans-serif;
   line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 img,
@@ -1047,22 +1049,27 @@ button {
 .demo-copy h2,
 .handoff-copy h2 {
   margin: 0;
-  letter-spacing: -0.065em;
+  letter-spacing: 0;
   line-height: 0.94;
 }
 
+.hub-hero-copy h1 span {
+  display: block;
+  white-space: nowrap;
+}
+
 .hub-hero-copy h1 {
-  max-width: 8.4ch;
-  font-size: clamp(3.6rem, 7.2vw, 6.7rem);
+  max-width: 9ch;
+  font-size: clamp(3.4rem, 6.6vw, 6.1rem);
 }
 
 .hub-lead {
-  max-width: 27ch;
+  max-width: 22ch;
   margin: 20px 0 0;
   color: rgba(229, 251, 247, 0.86);
-  font-size: clamp(1.24rem, 2vw, 1.75rem);
+  font-size: clamp(1.18rem, 1.76vw, 1.55rem);
   font-weight: 850;
-  letter-spacing: -0.045em;
+  letter-spacing: 0;
   line-height: 1.25;
 }
 
@@ -1098,7 +1105,7 @@ button {
 .hub-one-liner strong {
   color: white;
   font-size: clamp(1.1rem, 1.5vw, 1.35rem);
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   line-height: 1.35;
 }
 
@@ -1144,7 +1151,7 @@ button {
 .hub-stage-note strong,
 .demo-preview strong {
   font-size: clamp(1.2rem, 1.7vw, 1.55rem);
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .hub-stage-note span,
@@ -1200,7 +1207,7 @@ button {
 .flow-grid h3 {
   margin: 0 0 10px;
   font-size: 1.18rem;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
 }
 
 .flow-grid p,
@@ -1221,6 +1228,7 @@ button {
   max-width: 11ch;
   color: var(--ink);
   font-size: clamp(2.6rem, 5vw, 5rem);
+  letter-spacing: 0;
 }
 
 .demo-copy p,
@@ -1266,7 +1274,7 @@ button {
 .evidence-brief-grid h3 {
   margin: 0;
   font-size: 1.22rem;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   line-height: 1.28;
 }
 
@@ -1439,7 +1447,12 @@ button {
   }
 
   .hub-hero-copy h1 {
-    font-size: clamp(3rem, 14vw, 4.9rem);
+    max-width: 7ch;
+    font-size: clamp(3rem, 13vw, 4.35rem);
+  }
+
+  .hub-lead {
+    max-width: 20ch;
   }
 
   .hub-stage-note,
